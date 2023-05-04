@@ -4,15 +4,10 @@ title: About
 permalink: /about/
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](https://jekyllrb.com/)
+Hi! My name is Cole Shaffer.
 
-You can find the source code for Minima at GitHub:
-[jekyll][jekyll-organization] /
-[minima](https://github.com/jekyll/minima)
+I'm a software developer motivated to work on projects that address real-world problems.
 
-You can find the source code for Jekyll at GitHub:
-[jekyll][jekyll-organization] /
-[jekyll](https://github.com/jekyll/jekyll)
+Academically, I'm interested in operating systems (Linux in particular), networking, the hardware/software interface, and electronics.
 
-
-[jekyll-organization]: https://github.com/jekyll
+I like to summarize topics in my own words, long-form, in order to prove to myself I've learned a topic.  I don't expect much, if any, of what I write to be novel, but sometimes being exposed to the same content in a different voice can for reasons unknown induce those ah-ha moments. If there is any purpose to my adding to the compendium of blog summaries, stackoverflow posts, and documentation that inhabit the web, then this would be it.
