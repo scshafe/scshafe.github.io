@@ -6,7 +6,7 @@ categories: device-tree driver sys
 ---
 Note: this article is still in progress.
 
-In this post, I hope to give an overview of how to interpret a Linux system's peripheral topology.  This post is inspired by my own initial struggles to understand how all of this works when I first encountered the concept of the Linux **Device-model** while trying to learn the basics of driver writing.
+In this post, I hope to give an overview of how to interpret a Linux system's peripheral topology.  This post is inspired by my own initial struggles to understand how all of this works when I first encountered the concept of the Linux **Device-model** while trying to learn the basics of LKM (driver) development.
 
 As I tried to make sense of this topic, I went down many rabbit holes that approached understanding the topology of a Linux system from different angles.  I'll aim to trace my own path and highlight how these topics led from one to another, and how they fit into the big picture of the peripheral topology.  I'll also try to explain each topic at a high-level, but will by no means explore any item exhaustively.
 
@@ -16,7 +16,9 @@ Linux's device-model and system topology work in order to better understand how 
 
 My hope with this post is two-fold: in some places, I plan to dive deep, using my own system as an example, to highlight some details that gave me "a-ha" moments.  In other areas, I'll aim to outline the big picture and some of the elementary insights that are often left out of more sophisticated explanations. -->
 
-For the purposes of this post, I'll be analyzing output of a Beaglebone as well as my own system, running Kubuntu 22 on an AMD Ryzen cpu with the X570 chipset.  Additionally, I will assume conceptual knowledge just of the basics for how a driver works.  If the basics are new, I'd suggest having a look at the book "Linux Device Drivers" - it was a valuable resource for me.
+For the purposes of this post, I'll be analyzing output of a Beaglebone as well as my own system, running Kubuntu 22 on an AMD Ryzen cpu with the X570 chipset.  Additionally, I will assume a basic conceptual understanding Linux kernel modules.  
+
+<!-- If the basics are new, I'd suggest having a look at the book "Linux Device Drivers" - it was a valuable resource for me. -->
 
 # Roadmap
 
@@ -36,7 +38,7 @@ basic PCIe principles
 
 The overall topology of a Linux system can be found in the `/sys` directory.  In this directory, the kernel exposes information about all the hardware components in a system, from modules within the CPU itself to all the peripherals attached to buses like PCI or USB.  
 
-The **device-model** is Linux's conceptual name for its internal organization of logical devices.  Even though the underlying structure of the peripherals in a system is inherently tree-like (with the root of the tree being closest to the CPU), the device-model is commonly described as a giant web because a number of the directories within `/sys` are not representative of the tree-like structure of _actual_ devices, but are _organizational_ directories, in the sense that they will contain references (in the form of symbolic links) to all the devices that fit whatever criteria that directory describes.  For example, the `/sys/bus` directory will have directories for each bus in the system, and have symbolic links to the corresponding directory in `/sys/devices/...`.  Another example, in driver development, you can create a class of driver, such as gpio.  The `/sys/class/gpio` directory will then have a directory linking to each gpio device in `/sys/devices/...` wherever that gpio device exists in the overall directory.
+The **device-model** is Linux's conceptual name for its organization of logical devices.  Even though the underlying structure of the peripherals in a system is inherently tree-like (with the root of the tree being closest to the CPU), the device-model is commonly described as a giant web because a number of the directories within `/sys` are not representative of the tree-like structure of _actual_ devices, but are _organizational_ directories, in the sense that they will contain references (in the form of symbolic links) to all the devices that fit whatever criteria that directory describes.  For example, the `/sys/bus` directory will have directories for each bus in the system, and have symbolic links to the corresponding directory in `/sys/devices/...`.  Another example, in driver development, you can create a class of driver, such as gpio.  The `/sys/class/gpio` directory will then have a directory linking to each gpio device in `/sys/devices/...` wherever that gpio device exists in the overall directory.
 
 The `/sys/devices/` directory is the primary directory that describes the _actual_ layout of peripheral devices, and contains the entries that are _linked to_ from other directires like `/sys/bus` and `/sys/class`.  The key aspect to regard all things within this directory, is the notion that each device has a parent device which also happens to be represented by the parent directory.  The highest level devices are ones that are exposed directly to the CPU by the architecture of the system.  One common device at this level is a root complex which is the root for a PCI/PCIe hierarchy that will connect a tree of buses and peripheral devices (this will be the focus of analyzing peripherals in this post).
 
@@ -118,6 +120,10 @@ Additionally, because the root complex does not connect to any upstream bridge (
 # Example
 
 Before going into how the enumeration process works, I think it might be helpful to view some information from an actual system.  Below is an editted readout (for readability) of the `lspci` and followed by the `lspci -t` command.
+
+Below, the first bus corresponds to the internals of the root complex.  The device 00 on this bus, is an access point to interact with the root complex itself for configuration purposes.  Device 01 and 02 are both root complex PCIe ports, and the former is actually multiplexed, to serve as the root for 2 separate PCIe branches (in the tree-styled lspci output, there are branches indicated from each function of device 01). 
+
+
 ```
 $ lspci
 00:00.0 Host bridge: Advanced Micro Devices, Inc. [AMD] Renoir/Cezanne Root Complex
