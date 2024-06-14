@@ -22,20 +22,107 @@ If you are new to this topic, here are a few sources that I relied on in underst
 
 Before we dive into it, a number of terms are often used loosely to describe technically distinct but similar things.  To avoid confusion, throughout this article, I will use the following terms:
 
-**xterm/console** - the application which manages the window you view when you interact with "the command line".  I'll primarily use console in this post.
+**console** - the shell interface for directly interacting with a system without using an graphical environment.
+
+**xterm** - an application in a graphical environment* used to connect to a pty master/slave pair. It simulates the functionality of the console
+
+**tty** - (not discussed in this post) The drivers/devices associated with old terminal hardware. Note: in the /dev folder.
 
 **master pty** - the device file, i.e. the **instance** of pty driver code actively running, interfaced by the console application
 
 **slave pty** the device file being interfaced from the shell and command applications.  Note: in the `/dev` diretory, pty devices are listed under `/dev/pts`
 
-**shell** - a command-line interpreter that can be used to interface with the operating system and run programs
+**shell** - a program that can be used to interface with the operating system and run programs
 
-**hardware device** - the above "devices" refer to instances of running software.  This is a physical hardware device that exists on the motherboard.
+<!-- **hardware device** - the above "devices" refer to instances of running software.  This is a physical hardware device that exists on the motherboard.
 
-**terminal** - (not used in this post) The old-fashioned hardware system used to interact with a computer
+**logical device** - -->
 
-**tty** - (not discussed in this post) The drivers/devices associated with old terminal hardware. Note: in the /dev folder.
+---
 
+# The Console and TTY
+
+In order to understand how an application like xterm operates under the hood, it's useful to first understand what it's emulating, i.e. the "console". Additionally, as we'll see later, this system underpins any running Linux system so it's useful in this case to start from the bottom-up.
+
+# The Console
+
+If you boot a Linux system that is *not* configured to start-up any sort of graphical environment, then when the system fully loads, you will see on the screen the what looks to be a "full-screen" terminal, called the **virtual console**, or simply the console.  The console is part of the linux kernel
+
+> Quick Aside: A **typical** graphical environment a software stack that includes a display server (X11 or Wayland), display manager (LXDM, GDM, ...), and a desktop environment (KDE, Gnome, ...).  Desktop Environments also make use of window managers (Kwin, i3).
+> 
+> However, really any graphical application can be run at system boot by configuring systemd to run it.
+
+The console is essentially the lowest level of operation a user interacts with the system from.  It is also called the virtual console because it itself is intended to emulate the hardware which historically was used to connect a physical terminal station to a computer.  The physical terminals of past included all the functionality necessary to receive a byte stream and display characters on a screen, as well as to transmit keyboard inputs to the computer.  Modern keyboards and screens may now use a variety of technologies, and its the console's responsibility to interface between the hardware drivers and the **TTY** that the virtual console is connected to.
+
+## TTY
+
+the TTY is a "serial device" which at the simplest level, just forwards input from the console to whatever program attempts to read from the tty device (which can be found in the `/dev` directory).  The first program that is started will vary linux distribution to distribution, (on Arch it is a getty, on Kubuntu it is a login shell), but both will be started so that their standard inputs/outputs are matched up to the appropriate TTY device file, and these inputs/outputs will be passed to child processes they spawn.  Namely, they will start a bash process (or some similar shell).  These bash process running on that device will read and write to the TTY so that when you type in a command and hit enter, the bash process will read in the characters from that command including the enter character, and begin the process of executing that command by forking, running necessary setup on the child process, and finally excecuting the `exec` system call with the desired command.
+
+### Example Command at the TTY
+
+Suppose you've logged into your computer via the console (again: this means not using any userspace graphical interface), and run the command:
+
+```bash
+$ echo "Hello world!"
+```
+
+As you typed each character, the keyboard sends a signal to the computer where it was received by a physical device controller attached to the motherboard.  The controller sends the information to memory through the PCIe topology (or whatever other hardware peripheral topology your computer uses). At this point, the **device driver** for the keyboard peripheral is able to make the input signals available to the console.  The console (and the line discipline) will then make characters readable from the TTY device after an enter character is processed.
+
+The bash process that is initialized after logging in will be waiting on a listen system call, and when it receives the command, it will begin the above mentioned process of starting that command as a child process.  The child process itself will begin reading/writing to/from the TTY until it completes.
+
+***
+
+# XTerm and PTY
+
+The previous section describes how commands are run when interacting with the plain old console, but more often than not, we are running much more convenient and capable graphical environments that makes running many of the tasks we use our computers for, such as opening internet browsers and reading blog articles, a more pleasant experience.  So how is this different?
+
+## System Start-up
+
+When the Linux system boots with a graphical interface, there are still multiple virtual consoles made available to the user.  What's different is that the default virtual console is configured to begin a **display manager** instead of a login or getty process.(most modern systems use systemd for initializing and managing services but systemd is a massive separate topic out of the scope of this article).
+
+The display manager sits at the base of the graphical environment stack which comes in all shapes and sizes, but for the purposes of this article, I will assume it at least utilizes an Xorg **display server**
+
+> Trying to customize your own graphical environment by testing out different display managers, desktop environments, or window managers is a fun treasure-hunt and a worthwhile learning experience in itself.  I would recommend trying out a window manager such as i3 without a desktop environment, if only to develop a greater appreciation for different types of environments and the utilities they offer.
+
+The display manager will initialize the display server which will begin reading from the TTY.  At this point, any process that requires running graphics will need to register as a client to the Xorg server.  The Xorg server will read all input that comes through the TTY, and pass it on in the form of a **keysym event** to whatever program is designated the **active window**.
+
+The display manager registers as a client in order to display its graphical login interface (the sort of login screen most desktop computer users are familiar with), and after a user has logged in, the display manager will start the desktop environment.
+
+It's important to note that the desktop environment is a child process of the display manager in the same way a command like `echo` is a child process of the bash shell when operating via the console. However! While the echo process may receive inputs directly from the TTY device, the desktop environment (and all of its child processes henceforth) will receive IO via the Xorg server keysym events.
+
+## Xterm
+
+At this point, you are freshly logged in to a desktop environment and you click on the icon to open an Xterm application.  A number of things will happen with this:
+
+1.  The previously mentioned functionality of forking, setup, and executing the new Xterm process will be performed.
+
+2.  Xterm will make a request for its own window to the Xorg server.
+
+3. The Xterm process will establish a new **pseudo-terminal device**, aka a PTY.
+
+
+## Setting up the PTY
+
+First, Xterm will run the syscall **posix_openpt**.  This will establish a connection between a **master device** for a pseudo-terminal and return a file descriptor `filedes` for that device.  At this point, the terminal application will fork.  The parent fork will continue to operate as the Xterm application.
+
+The child process, which will ultimately operate as the shell process, needs to run the system call **ptsname**, passing `filedes` as input to the system call.  This function will return a pointer to a `char*` that contains the pathname for the slave pseudo-terminal device associated with that master pseudo-terminal device. Note: while the slave pty device will be listed in the `/dev/pts` directory, the master file descriptor will not be listed anywhere, and is intended only for use by the application that called `posix_openpt`.
+
+
+## Running echo via XTerm
+
+When you run:
+
+```bash
+$ echo "Hello World!"
+```
+
+from Xterm, the underlying functionality that makes the console work is still used.  The difference begins with the Xorg Server reading the input from the TTY (instead of the bash shell directly).
+
+From there, the Xorg server will send keysym events to the active window (whichever window is in the foreground) [CAVEAT-window manager intercepting keysyms].  In this case, Xterm will interpret these keysym events and pass the corresponding characters in to the master PTY device which it opened and that only it has access to.  The PTY master will make these characters accessible at the slave PTY device, from which the shell that is running will be blocked on a listen call until it receives that input.  Finally, once the shell has read the command, it can itself fork, setup, and execute the command.  That command may receive further input via the PTY slave and can write its output to that device as well.
+
+
+***
+***
 ---
 
 
