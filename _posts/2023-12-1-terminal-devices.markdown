@@ -24,15 +24,18 @@ Before we dive into it, a number of terms are often used loosely to describe tec
 
 **console** - the shell interface for directly interacting with a system without using an graphical environment.
 
-**xterm** - an application in a graphical environment* used to connect to a pty master/slave pair. It simulates the functionality of the console
+**xterm** - an example of a graphical terminal application used to simulate the functionality of the console. It interfaces with the master pty device. Other terminal applications (e.g. gnome-terminal, konsole, alacrity. "gnome-terminal" is the default on Ubuntu)
 
-**tty** - (not discussed in this post) The drivers/devices associated with old terminal hardware. Note: in the /dev folder.
+**tty** - refers to both tty drivers (aka LKM's, meaning the code itself) as well as the logical devices (aka character device in the `/dev` folder)
 
-**master pty** - the device file, i.e. the **instance** of pty driver code actively running, interfaced by the console application
+**master pty** - the device file, i.e. the **instance** of pty driver code actively running, interfaced from the xterm application
 
-**slave pty** the device file being interfaced from the shell and command applications.  Note: in the `/dev` diretory, pty devices are listed under `/dev/pts`
+**slave pty** the device file created when xterm being interfaced from the shell and command applications.  Note: in the `/dev` diretory, pty devices are listed under `/dev/pts`
 
-**shell** - a program that can be used to interface with the operating system and run programs
+**shell** - a program that offers a scripting environment to run commands and interface with the system. Common ones include:
+- bash (default on Ubuntu)
+- sh
+- zsh (default on macOS)
 
 <!-- **hardware device** - the above "devices" refer to instances of running software.  This is a physical hardware device that exists on the motherboard.
 
