@@ -12,7 +12,7 @@ $ cat .ruby-version | rbenv install
 ```
 $ gem install jekyll bundler
 
-$ bundle install jekyll
+$ bundle install 
 
 $ bundle exec jekyll server
 ```
