@@ -30,7 +30,7 @@ layout: default
 
       <!-- Article content -->
    <div class="article-body{% if page.Category != " Technology" %} serif{% endif %}" itemprop="articleBody">
-       {{ content }}
+       {{ content  | toc}}
    </div>
 
 

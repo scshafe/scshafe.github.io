@@ -2,6 +2,7 @@
 layout: post
 title: "Device Model and System Topology"
 date: 2023-11-30 13:00:00 -0700
+toc: true
 categories: device-tree driver sys
 ---
 Note: this article is still in progress.

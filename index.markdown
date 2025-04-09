@@ -4,3 +4,4 @@
 
 layout: home
 ---
+Welcome to my site. I post about my projects and about interesting topics in order to learn them better.
