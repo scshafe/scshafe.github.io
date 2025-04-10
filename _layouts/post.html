@@ -1,6 +1,9 @@
 ---
 layout: default
 ---
+<head>
+    <link rel="stylesheet" href="/assets/css/styles.css">
+</head>
 {% assign post_cat = site.collection_cats | where:"title", page.Category | first %}
 <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
     
@@ -19,7 +22,8 @@ layout: default
         <div class="row spacer-y">
             <div class="col-12">
                 <div class="big-banner rounded">
-                    <h2 class="text-success p-3 pb-0">
+                    <h2 class="text-success p-3 pb-0 my-definition
+">
                         This post is part of the {{ page.series_title }} series</h2>
                     {% assign posts = site.posts | where: "is_series", true | where: "series_title", page.series_title |
                     sort: 'date' %}
