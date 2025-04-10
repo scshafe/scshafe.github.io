@@ -4,7 +4,7 @@ title: About
 permalink: /about/
 ---
 
-Hi! My name is Cole Shaffer.
+Hi! My name is Cole.
 
 I'm a software engineer.
 
