@@ -1,11 +1,19 @@
-
+@import 'color_palette';
 
 .series-post-section {
-    background-color: lightblue;
+    background-color: $background-color-2;
+    border-color: $border-color;
+    border-width: 1px 2px 4px 2px;
+    border-style: solid;
 }
 
 
+.series-post-bullet {
+    font: bold;
+}
+
 .series-header {
-    color: red;
+    color: #3D3E3D;
+    
 }
 
