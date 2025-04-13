@@ -31,7 +31,7 @@ github_username:  scshafe
 
 # Build settings
 #theme: minima
-remote_theme: instructional-blog
+remote_theme: scshafe/instructional-blog
 #theme: instructional-blog
 plugins:
   - jekyll-feed
