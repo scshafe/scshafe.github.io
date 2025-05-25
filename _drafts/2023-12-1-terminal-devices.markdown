@@ -9,6 +9,8 @@ categories: tty
 
 Learning about the tty is an interesting topic because it offers such amazing context about how information travels within a computer. For me, comparing operating a system through a tty offers a great comparison to more convention means of operation as using graphical interface programs, text editing programs such as vim, as well as by remotely accessing a computer by means such as ssh.
 
+Mention how if you use vim from the linux console, periodically messages about "MMMIO read error..." will appear where the cursor is. Why?
+
 # Valuable Sources
 
 If you are new to this topic, here are a few sources that I relied on in understanding the theory and which explain it far better than I can:

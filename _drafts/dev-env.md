@@ -11,6 +11,43 @@ Schemes:
 - solarized color palette
 
 
+# Setting up the Console Display
+
+Getting the Linux Console Drivers to render my screen correctly wasn't something that required much additional configuration on my desktop. All I had to do was change the text size to what I prefer. On my laptop, however, I also needed to set kernel commandline options from GRUB during boot depending on whether I'd like to use my laptops built-in display or an external monitor.
+
+### Font selection
+
+Picking the font for an Ubuntu machine is easy enough using `dpkg-reconfigure console-setup`.
+
+### Display sizing parameters
+
+The Linux console enables you to pick for a given display the pixel-definition measurements from among a list of compatible values. This [stackoverflow post]() provides insights how this can be done. On my laptop, which is where I need to manually set these values, I opt simply to do them from GRUB each time I boot. By settings the following value in `/etc/default/grub`, every time I boot, I'm brought to the GRUB interface.
+
+```
+GRUB_TIMEOUT=-1
+```
+
+
+
+From there, I enter the grub commandline by entering `...`, and then just run the following bare-bones commands to bring up the kernel:
+
+```
+
+
+```
+
+The commandline options relevant here are the parameters:
+```
+video=eDP-1:d video=HDMI-1:3440:1440@60
+```
+The first one tells the kernel to force off the usage of my laptop's built-in display. The second one tells it to use my external monitor with pixel dimensions of 3440 x 1440 and a refresh rate of 60Hz.
+
+This [stackoverflow post]() does a good job of explaining how you can
+
+
+
+prefer to change text sizes, or if you'd prefer to use an external monitor from a laptop, 
+
 
 # Console Configuration
 
