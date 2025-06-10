@@ -1,4 +1,22 @@
 
+# General outline of what's needed
+
+The linux kernel needs to be built with the correct configuration that enables drivers for the LCD display
+
+The device tree needs to be loaded and then overlaid with the dtbo that enable the LCD cape
+
+
+
+
+
+
+
+######################
+
+
+
+
+
 BBB_BOOT_DIR="/media/$(whoami)/BOOT"
 BBB_ROOT_DIR="/media/$(whoami)/ROOT"
 
