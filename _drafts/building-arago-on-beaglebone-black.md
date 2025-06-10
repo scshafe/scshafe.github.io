@@ -28,7 +28,12 @@ When booting from the SD card, u-boot should be automatically loaded and execute
 setenv bootargs "earlyprintk console=ttyO0,115200n8 root=/dev/mmcblk0p2 rootwait ro rootfstype=ext4"
 fatload mmc 0:1 0x80008000 zimage
 fatload mmc 0:1 0x81000000 am335x-boneblack.dtb
+fatload mmc 0:1 0x81f00000 overlays/BB-BONE-4D4R-01-00A1.dtbo
+fdt addr 0x81000000
+fdt resize 8192
+fdt apply 0x81f00000
 bootz 0x80008000 - 0x81000000
 ```
 
-
+```
+setenv fdtaddr 
