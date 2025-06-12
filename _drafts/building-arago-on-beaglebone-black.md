@@ -1,9 +1,15 @@
 
 # General outline of what's needed
 
-The linux kernel needs to be built with the correct configuration that enables drivers for the LCD display
+TI maintains its own Yocto reference distribution called "Arago" (instead of Poky) which can be used to build a custom image for the BBB. This simplifies the process considerably for getting an image up and running on the board, however, the base image will still be missing a few important details for making this project work. Extra configuration is necessary to get the LCD display to work.
 
-The device tree needs to be loaded and then overlaid with the dtbo that enable the LCD cape
+These extra steps include:
+- customizing the linux build configuration
+- overlaying the device tree with the LCD cape
+
+The steps below outline the process I followed to achieve this, from cloning the repo all the way through to flashing the image onto an SD card and then booting from it.
+
+Note: I am using version 09.01.00.00 of the Arago reference distribution.
 
 
 # Customizing kernel Configuration
