@@ -1,5 +1,0 @@
-
-export MY_JEKYLL_BLOG_DIR="$(pwd)"
-
-
-alias run_blog_local="bundle exec jekyll serve"

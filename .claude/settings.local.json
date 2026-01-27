@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(web-design-guidelines)",
+      "Skill(web-design-guidelines:*)",
+      "Bash(npm run build:*)"
+    ]
+  }
+}

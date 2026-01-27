@@ -1,0 +1,144 @@
+{
+  "themes": {
+    "activeThemeId": "midnight-blue",
+    "colorSchemePreference": "system",
+    "customThemes": []
+  },
+  "navigation": {
+    "siteName": "Cole",
+    "header": [
+      {
+        "id": "blog",
+        "label": "Blog",
+        "url": "/blog/",
+        "position": "left",
+        "icon": null,
+        "external": false
+      },
+      {
+        "id": "about",
+        "label": "Experience",
+        "url": "/about/",
+        "position": "left",
+        "icon": null,
+        "external": false
+      },
+      {
+        "id": "github",
+        "label": "scshafe",
+        "url": "https://github.com/scshafe",
+        "position": "right",
+        "icon": "github",
+        "external": true
+      }
+    ],
+    "footer": [
+      {
+        "id": "rss",
+        "label": "RSS Feed",
+        "url": "/feed.xml",
+        "icon": "rss",
+        "external": false
+      },
+      {
+        "id": "github-footer",
+        "label": "GitHub",
+        "url": "https://github.com/scshafe",
+        "icon": "github",
+        "external": true
+      }
+    ]
+  },
+  "posts": {
+    "device-tree": {
+      "title": "Device Model and System Topology",
+      "date": "2023-11-30T13:00:00-0700",
+      "categories": [
+        "device-tree",
+        "driver",
+        "sys"
+      ],
+      "layout": "post",
+      "toc": true
+    },
+    "cross-compile-cmake-pkgconfig-bbb": {
+      "title": "Developing an application for the Beaglebone Black",
+      "date": "2024-06-18T13:00:00-0700",
+      "categories": [
+        "linux",
+        "cross-compilers",
+        "cmake",
+        "beaglebone-black"
+      ],
+      "layout": "post",
+      "is_series": true,
+      "series_title": "Motion Sensing Nightlight with the Beaglebone Black"
+    },
+    "differential-amplifier-voltage-flow": {
+      "title": "Differential Amplifiers Propagating Changes in Inputs",
+      "date": "2024-06-18T13:00:00-0700",
+      "categories": [
+        "differential-amplifiers",
+        "circuits"
+      ],
+      "layout": "hidden"
+    },
+    "configuring-development-workflow": {
+      "title": "Setting up a development workflow",
+      "date": "2024-06-18T13:00:00-0700",
+      "categories": [
+        "linux",
+        "cross-compilers",
+        "cmake",
+        "beaglebone-black"
+      ],
+      "layout": "post",
+      "is_series": true,
+      "series_title": "Motion Sensing Nightlight with the Beaglebone Black"
+    },
+    "terminal-key-encoding": {
+      "title": "Character Encoding in the Virtual Console and Terminals",
+      "date": "2025-04-01T13:00:00-0700",
+      "categories": [
+        "tty"
+      ],
+      "layout": "post"
+    }
+  },
+  "experiences": {
+    "order": [
+      "operations-and-forward-engineer",
+      "software-engineer"
+    ],
+    "operations-and-forward-engineer": {
+      "accentColor": "",
+      "backgroundColor": "",
+      "company": "",
+      "endDate": "",
+      "image": "",
+      "role": "",
+      "startDate": "",
+      "textColor": "",
+      "title": "Operations and Forward Engineer"
+    },
+    "software-engineer": {
+      "accentColor": "",
+      "backgroundColor": "",
+      "company": "",
+      "endDate": "",
+      "image": "",
+      "role": "",
+      "startDate": "",
+      "textColor": "",
+      "title": "Software Engineer"
+    }
+  },
+  "about": {
+    "title": "About",
+    "description": "About Cole, a software engineer."
+  },
+  "home": {
+    "title": "Hi, I'm Cole",
+    "description": "A blog about software engineering, embedded systems, and more."
+  }
+}
