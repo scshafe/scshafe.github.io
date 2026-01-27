@@ -1,16 +1,28 @@
 'use client';
 
 import { useState } from 'react';
+import { TagInput } from '@/components/ui';
 
 const DEV_EDITOR_URL = 'http://localhost:3001';
+
+function parseCategories(categories: string | string[] | undefined): string[] {
+  if (!categories) return [];
+  if (Array.isArray(categories)) return categories;
+  return categories
+    .split(/[,\s]+/)
+    .map((cat) => cat.trim())
+    .filter(Boolean);
+}
 
 interface FrontmatterEditorProps {
   frontmatter: Record<string, unknown>;
   onChange: (fm: Record<string, unknown>) => void;
   contentType: 'post' | 'about' | 'experience' | 'home';
+  /** All existing tags from all posts for autocomplete suggestions */
+  allTags?: string[];
 }
 
-export function FrontmatterEditor({ frontmatter, onChange, contentType }: FrontmatterEditorProps) {
+export function FrontmatterEditor({ frontmatter, onChange, contentType, allTags = [] }: FrontmatterEditorProps) {
   const [imageUrl, setImageUrl] = useState('');
   const [colorSchemeUrl, setColorSchemeUrl] = useState('');
   const [fetchingImage, setFetchingImage] = useState(false);
@@ -343,12 +355,12 @@ export function FrontmatterEditor({ frontmatter, onChange, contentType }: Frontm
         />
       </div>
       <div>
-        <label className={labelClass}>Categories (comma or space-separated)</label>
-        <input
-          type="text"
-          value={(frontmatter.categories as string) || ''}
-          onChange={(e) => updateField('categories', e.target.value)}
-          className={inputClass}
+        <TagInput
+          tags={parseCategories(frontmatter.categories as string | string[] | undefined)}
+          allTags={allTags}
+          onChange={(tags) => updateField('categories', tags)}
+          label="Tags"
+          placeholder="Add tags..."
         />
       </div>
       <div>

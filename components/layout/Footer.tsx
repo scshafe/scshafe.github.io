@@ -4,6 +4,8 @@ import Link from 'next/link';
 
 interface NavItem {
   id: string;
+  type?: 'NavLink'; // Type identifier
+  parentId?: string; // Parent container ID
   label: string;
   url: string;
   position?: 'left' | 'right';
@@ -101,10 +103,10 @@ export default function Footer({ siteName = "scshafe's Blog", navItems }: Footer
 
   return (
     <footer
-      className="border-t border-[var(--border)] bg-[var(--background-secondary)] mt-auto"
+      className="border-t border-[var(--border)] bg-[var(--background-secondary)] mt-auto safe-area-bottom"
       role="contentinfo"
     >
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="max-w-4xl mx-auto px-4 py-4 md:py-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-[var(--foreground-muted)] text-[length:var(--text-sm)]">
           <p>&copy; {new Date().getFullYear()} {siteName}</p>
           <nav className="flex gap-6" aria-label="Footer navigation">

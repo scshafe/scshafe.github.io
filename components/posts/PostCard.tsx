@@ -14,9 +14,12 @@ export default function PostCard({ post }: PostCardProps) {
   });
 
   return (
-    <article className="group border-b border-[var(--border)] py-6 last:border-b-0 transition-colors hover:bg-[var(--background-secondary)]/30 -mx-4 px-4 rounded-lg">
-      <Link href={post.url} className="block hover:no-underline">
-        <h2 className="text-[length:var(--text-xl)] font-semibold mb-2 text-[var(--foreground)] group-hover:text-[var(--link)] transition-colors">
+    <article
+      className="group border-b border-[var(--border)] py-6 last:border-b-0 transition-all hover:bg-[var(--background-secondary)]/30 -mx-4 px-4 rounded-lg"
+      aria-label={`Blog post: ${post.frontMatter.title}`}
+    >
+      <Link href={post.url} className="block hover:no-underline focus-visible:outline-none">
+        <h2 className="text-[length:var(--text-xl)] font-semibold mb-2 text-[var(--foreground)] group-hover:text-[var(--link)] group-focus-visible:text-[var(--link)] transition-colors">
           {post.frontMatter.title}
         </h2>
       </Link>

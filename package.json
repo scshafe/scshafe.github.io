@@ -6,12 +6,15 @@
     "dev": "next dev",
     "author:server": "python3 backend/server.py",
     "author": "npm run author:server & npm run dev",
-    "prebuild": "node scripts/generate-feed.mjs",
+    "export:metadata": "python3 backend/export_metadata.py",
+    "prebuild": "npm run export:metadata && node scripts/generate-feed.mjs",
     "build": "next build",
     "postbuild": "cp out/index.html ./index.html",
     "start": "next start",
     "lint": "eslint",
-    "preview": "npx serve out"
+    "preview": "npx serve out",
+    "migrate": "python3 backend/migrate_to_sqlite.py",
+    "db:reset": "python3 backend/reset_database.py"
   },
   "dependencies": {
     "feed": "^5.2.0",

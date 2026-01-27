@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuthorMode } from '@/components/author/DevModeProvider';
 import { useTheme } from '@/components/theme';
+import { IconButton } from '@/components/ui';
 
 interface NavItem {
   id: string;
+  type?: 'NavLink'; // Type identifier
+  parentId?: string; // Parent container ID
   label: string;
   url: string;
   position?: 'left' | 'right';
@@ -50,8 +53,8 @@ export default function Header({ siteName = "scshafe's Blog", navItems }: Header
     };
   }, [isMenuOpen]);
 
-  // Close menu on route change (link click)
-  const handleLinkClick = () => setIsMenuOpen(false);
+  // Close menu on route change (link click) - memoized for performance
+  const handleLinkClick = useCallback(() => setIsMenuOpen(false), []);
 
   const renderIcon = (icon: string | null | undefined) => {
     if (!icon) return null;
@@ -111,13 +114,12 @@ export default function Header({ siteName = "scshafe's Blog", navItems }: Header
     );
   };
 
-  // Theme toggle button component
-  const ThemeToggle = ({ mobile = false }: { mobile?: boolean }) => (
-    <button
+  // Theme toggle button component using accessible IconButton
+  const ThemeToggle = () => (
+    <IconButton
       onClick={toggleColorScheme}
-      className={`p-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background)] rounded-md transition-colors ${mobile ? '' : ''}`}
-      title={colorScheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
       aria-label={colorScheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      title={colorScheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       {colorScheme === 'dark' ? (
         // Sun icon for dark mode (clicking will switch to light)
@@ -130,7 +132,15 @@ export default function Header({ siteName = "scshafe's Blog", navItems }: Header
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
         </svg>
       )}
-    </button>
+    </IconButton>
+  );
+
+  // Settings icon component
+  const SettingsIcon = () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
   );
 
   return (
@@ -162,44 +172,40 @@ export default function Header({ siteName = "scshafe's Blog", navItems }: Header
 
           {/* Settings Button (Author Mode Only) */}
           {isAuthorMode && (
-            <Link
+            <IconButton
+              as="link"
               href="/settings/"
-              className="p-2 text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-md transition-colors"
+              aria-label="Settings (author only)"
               title="Settings"
+              variant="accent"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </Link>
+              <SettingsIcon />
+            </IconButton>
           )}
         </div>
 
         {/* Mobile Menu Button */}
         <div className="md:hidden flex items-center gap-1">
           {/* Mobile Theme Toggle */}
-          <ThemeToggle mobile />
+          <ThemeToggle />
 
           {/* Mobile Settings Button */}
           {isAuthorMode && (
-            <Link
+            <IconButton
+              as="link"
               href="/settings/"
-              className="p-2 text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-md transition-colors"
+              aria-label="Settings (author only)"
               title="Settings"
+              variant="accent"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </Link>
+              <SettingsIcon />
+            </IconButton>
           )}
 
-          <button
-            className="p-2 -mr-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors"
+          <IconButton
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-expanded={isMenuOpen}
-            aria-controls="mobile-menu"
             aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+            className="-mr-2"
           >
             <svg
               className="w-6 h-6"
@@ -214,7 +220,7 @@ export default function Header({ siteName = "scshafe's Blog", navItems }: Header
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               )}
             </svg>
-          </button>
+          </IconButton>
         </div>
       </div>
 

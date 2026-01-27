@@ -3,7 +3,10 @@
     "allow": [
       "Skill(web-design-guidelines)",
       "Skill(web-design-guidelines:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(python3:*)",
+      "Bash(npm run export:metadata:*)",
+      "Bash(npm run db:reset:*)"
     ]
   }
 }

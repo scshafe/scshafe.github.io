@@ -8,9 +8,8 @@ const DEV_EDITOR_URL = 'http://localhost:3001';
 
 interface ExperienceCardProps {
   id: string;
-  title: string;
+  title: string; // Now represents "Role"
   company?: string;
-  role?: string;
   startDate?: string;
   endDate?: string;
   image?: string;
@@ -25,9 +24,8 @@ interface ExperienceCardProps {
 
 export function ExperienceCard({
   id,
-  title: initialTitle,
+  title: initialTitle, // Now represents "Role"
   company: initialCompany,
-  role: initialRole,
   startDate: initialStartDate,
   endDate: initialEndDate,
   image,
@@ -40,9 +38,8 @@ export function ExperienceCard({
   dragHandleProps,
 }: ExperienceCardProps) {
   const { isAuthorMode } = useAuthorMode();
-  const [title, setTitle] = useState(initialTitle);
+  const [title, setTitle] = useState(initialTitle); // Now represents "Role"
   const [company, setCompany] = useState(initialCompany || '');
-  const [role, setRole] = useState(initialRole || '');
   const [startDate, setStartDate] = useState(initialStartDate || '');
   const [endDate, setEndDate] = useState(initialEndDate || '');
   const [content, setContent] = useState(initialContent);
@@ -63,7 +60,6 @@ export function ExperienceCard({
     // Update local state
     if (field === 'title') setTitle(value);
     if (field === 'company') setCompany(value);
-    if (field === 'role') setRole(value);
     if (field === 'startDate') setStartDate(value);
     if (field === 'endDate') setEndDate(value);
     if (field === 'content') setContent(value);
@@ -72,7 +68,6 @@ export function ExperienceCard({
     const metadata = {
       title: field === 'title' ? value : title,
       company: field === 'company' ? value : company,
-      role: field === 'role' ? value : role,
       startDate: field === 'startDate' ? value : startDate,
       endDate: field === 'endDate' ? value : endDate,
       image,
@@ -149,7 +144,7 @@ export function ExperienceCard({
                     onSave={(value) => saveField('title', value)}
                     as="h3"
                     className="text-[length:var(--text-lg)] font-semibold"
-                    placeholder="Title"
+                    placeholder="Role"
                   />
                 ) : (
                   <h3 className="text-[length:var(--text-lg)] font-semibold" style={textColor ? { color: textColor } : undefined}>
@@ -158,16 +153,9 @@ export function ExperienceCard({
                 )}
               </div>
 
-              {/* Role and Company - inline editable */}
+              {/* Company - inline editable */}
               {isAuthorMode ? (
-                <div className="flex items-center gap-1 text-[length:var(--text-sm)] text-[var(--foreground-secondary)] mt-0.5 flex-wrap">
-                  <InlineText
-                    value={role}
-                    onSave={(value) => saveField('role', value)}
-                    as="span"
-                    placeholder="Role"
-                  />
-                  {(role || company) && <span> at </span>}
+                <div className="text-[length:var(--text-sm)] text-[var(--foreground-secondary)] mt-0.5">
                   <InlineText
                     value={company}
                     onSave={(value) => saveField('company', value)}
@@ -177,11 +165,9 @@ export function ExperienceCard({
                   />
                 </div>
               ) : (
-                (company || role) && (
+                company && (
                   <p className="text-[length:var(--text-sm)] text-[var(--foreground-secondary)] mt-0.5" style={textColor ? { color: textColor, opacity: 0.8 } : undefined}>
-                    {role && <span>{role}</span>}
-                    {role && company && <span> at </span>}
-                    {company && <span className="font-medium">{company}</span>}
+                    <span className="font-medium">{company}</span>
                   </p>
                 )
               )}

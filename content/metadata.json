@@ -1,14 +1,20 @@
 {
   "themes": {
-    "activeThemeId": "midnight-blue",
-    "colorSchemePreference": "system",
+    "id": "themes",
+    "type": "Themes",
+    "activeThemeId": "ocean-depths",
+    "colorSchemePreference": "light",
     "customThemes": []
   },
   "navigation": {
+    "id": "navigation",
+    "type": "Navigation",
     "siteName": "Cole",
     "header": [
       {
-        "id": "blog",
+        "id": "nav-header-blog",
+        "type": "NavLink",
+        "parentId": "navigation",
         "label": "Blog",
         "url": "/blog/",
         "position": "left",
@@ -16,15 +22,19 @@
         "external": false
       },
       {
-        "id": "about",
+        "id": "nav-header-experience",
+        "type": "NavLink",
+        "parentId": "navigation",
         "label": "Experience",
-        "url": "/about/",
+        "url": "/experience/",
         "position": "left",
         "icon": null,
         "external": false
       },
       {
-        "id": "github",
+        "id": "nav-header-github",
+        "type": "NavLink",
+        "parentId": "navigation",
         "label": "scshafe",
         "url": "https://github.com/scshafe",
         "position": "right",
@@ -34,111 +44,254 @@
     ],
     "footer": [
       {
-        "id": "rss",
+        "id": "nav-footer-rss",
+        "type": "NavLink",
+        "parentId": "navigation",
         "label": "RSS Feed",
         "url": "/feed.xml",
+        "position": "left",
         "icon": "rss",
         "external": false
       },
       {
-        "id": "github-footer",
+        "id": "nav-footer-github",
+        "type": "NavLink",
+        "parentId": "navigation",
         "label": "GitHub",
         "url": "https://github.com/scshafe",
+        "position": "left",
         "icon": "github",
         "external": true
       }
     ]
   },
   "posts": {
-    "device-tree": {
-      "title": "Device Model and System Topology",
-      "date": "2023-11-30T13:00:00-0700",
-      "categories": [
-        "device-tree",
-        "driver",
-        "sys"
-      ],
-      "layout": "post",
-      "toc": true
-    },
-    "cross-compile-cmake-pkgconfig-bbb": {
-      "title": "Developing an application for the Beaglebone Black",
-      "date": "2024-06-18T13:00:00-0700",
-      "categories": [
-        "linux",
-        "cross-compilers",
-        "cmake",
-        "beaglebone-black"
-      ],
-      "layout": "post",
-      "is_series": true,
-      "series_title": "Motion Sensing Nightlight with the Beaglebone Black"
-    },
-    "differential-amplifier-voltage-flow": {
-      "title": "Differential Amplifiers Propagating Changes in Inputs",
-      "date": "2024-06-18T13:00:00-0700",
-      "categories": [
-        "differential-amplifiers",
-        "circuits"
-      ],
-      "layout": "hidden"
-    },
-    "configuring-development-workflow": {
-      "title": "Setting up a development workflow",
-      "date": "2024-06-18T13:00:00-0700",
-      "categories": [
-        "linux",
-        "cross-compilers",
-        "cmake",
-        "beaglebone-black"
-      ],
-      "layout": "post",
-      "is_series": true,
-      "series_title": "Motion Sensing Nightlight with the Beaglebone Black"
-    },
-    "terminal-key-encoding": {
-      "title": "Character Encoding in the Virtual Console and Terminals",
-      "date": "2025-04-01T13:00:00-0700",
-      "categories": [
-        "tty"
-      ],
-      "layout": "post"
+    "id": "posts",
+    "type": "Posts",
+    "items": {
+      "post-terminal-key-encoding": {
+        "id": "post-terminal-key-encoding",
+        "type": "Post",
+        "parentId": "posts",
+        "slug": "terminal-key-encoding",
+        "title": "Character Encoding in the Virtual Console and Terminals",
+        "date": "2025-04-01T13:00:00-0700",
+        "categories": [
+          "tty"
+        ],
+        "layout": "post",
+        "toc": false,
+        "is_series": false,
+        "series_title": null
+      },
+      "post-cross-compile-cmake-pkgconfig-bbb": {
+        "id": "post-cross-compile-cmake-pkgconfig-bbb",
+        "type": "Post",
+        "parentId": "posts",
+        "slug": "cross-compile-cmake-pkgconfig-bbb",
+        "title": "Developing an application for the Beaglebone Black",
+        "date": "2024-06-18T13:00:00-0700",
+        "categories": [
+          "linux",
+          "cross-compilers",
+          "cmake",
+          "beaglebone-black"
+        ],
+        "layout": "post",
+        "toc": false,
+        "is_series": true,
+        "series_title": "Motion Sensing Nightlight with the Beaglebone Black"
+      },
+      "post-differential-amplifier-voltage-flow": {
+        "id": "post-differential-amplifier-voltage-flow",
+        "type": "Post",
+        "parentId": "posts",
+        "slug": "differential-amplifier-voltage-flow",
+        "title": "Differential Amplifiers Propagating Changes in Inputs",
+        "date": "2024-06-18T13:00:00-0700",
+        "categories": [
+          "differential-amplifiers",
+          "circuits"
+        ],
+        "layout": "hidden",
+        "toc": false,
+        "is_series": false,
+        "series_title": null
+      },
+      "post-configuring-development-workflow": {
+        "id": "post-configuring-development-workflow",
+        "type": "Post",
+        "parentId": "posts",
+        "slug": "configuring-development-workflow",
+        "title": "Setting up a development workflow",
+        "date": "2024-06-18T13:00:00-0700",
+        "categories": [
+          "linux",
+          "cross-compilers",
+          "cmake",
+          "beaglebone-black"
+        ],
+        "layout": "post",
+        "toc": false,
+        "is_series": true,
+        "series_title": "Motion Sensing Nightlight with the Beaglebone Black"
+      },
+      "post-device-tree": {
+        "id": "post-device-tree",
+        "type": "Post",
+        "parentId": "posts",
+        "slug": "device-tree",
+        "title": "Device Model and System Topology",
+        "date": "2023-11-30T13:00:00-0700",
+        "categories": [
+          "device-tree",
+          "driver",
+          "sys"
+        ],
+        "layout": "post",
+        "toc": true,
+        "is_series": false,
+        "series_title": null
+      }
     }
   },
   "experiences": {
+    "id": "experiences",
+    "type": "Experiences",
     "order": [
-      "operations-and-forward-engineer",
-      "software-engineer"
+      "exp-operations-and-forward-engineer",
+      "exp-software-engineer"
     ],
-    "operations-and-forward-engineer": {
-      "accentColor": "",
-      "backgroundColor": "",
-      "company": "",
-      "endDate": "",
-      "image": "",
-      "role": "",
-      "startDate": "",
-      "textColor": "",
-      "title": "Operations and Forward Engineer"
-    },
-    "software-engineer": {
-      "accentColor": "",
-      "backgroundColor": "",
-      "company": "",
-      "endDate": "",
-      "image": "",
-      "role": "",
-      "startDate": "",
-      "textColor": "",
-      "title": "Software Engineer"
+    "items": {
+      "exp-operations-and-forward-engineer": {
+        "id": "exp-operations-and-forward-engineer",
+        "type": "Experience",
+        "parentId": "experiences",
+        "title": "Forward Engineer and Operations Lead",
+        "company": "Newton AI",
+        "startDate": "June 2025",
+        "endDate": "Feb 2026",
+        "image": "",
+        "backgroundColor": "",
+        "textColor": "",
+        "accentColor": ""
+      },
+      "exp-software-engineer": {
+        "id": "exp-software-engineer",
+        "type": "Experience",
+        "parentId": "experiences",
+        "title": "Test",
+        "company": "Elektrobit",
+        "startDate": "May 2022",
+        "endDate": "June 2023",
+        "image": "",
+        "backgroundColor": "",
+        "textColor": "",
+        "accentColor": ""
+      }
     }
   },
-  "about": {
-    "title": "About",
-    "description": "About Cole, a software engineer."
-  },
-  "home": {
-    "title": "Hi, I'm Cole",
-    "description": "A blog about software engineering, embedded systems, and more."
+  "views": {
+    "id": "views",
+    "type": "Views",
+    "defaultHomeViewId": "view-home",
+    "items": [
+      {
+        "id": "view-home",
+        "type": "View",
+        "parentId": "views",
+        "path": "/",
+        "name": "home",
+        "title": "Hi, I'm Cole",
+        "browserTitle": "Cole",
+        "description": "software engineer. AI.",
+        "isHome": true,
+        "parentViewId": null,
+        "content": {
+          "main": "# Welcome to scshafe's Blog\n\nThis blog is my attempt to publish my own study notes on interesting topics. I hope they can help contribute to your own journey of learning!\n\n# Hello \n\nBrowse the posts below to explore topics in software engineering, embedded systems, and more."
+        },
+        "createdAt": null,
+        "updatedAt": "2026-01-27 09:18:38",
+        "components": [
+          {
+            "id": "comp-home-title",
+            "type": "Title",
+            "parentId": "view-home",
+            "config": {
+              "showTitle": true,
+              "level": "h1"
+            },
+            "visible": true
+          },
+          {
+            "id": "comp-home-content",
+            "type": "MarkdownEditor",
+            "parentId": "view-home",
+            "config": {
+              "contentKey": "main",
+              "placeholder": "Add page content..."
+            },
+            "visible": true
+          }
+        ]
+      },
+      {
+        "id": "view-blog",
+        "type": "View",
+        "parentId": "views",
+        "path": "/blog",
+        "name": "blog",
+        "title": "Blog",
+        "browserTitle": "Blog - Cole",
+        "description": "Posts about software engineering, embedded systems, and other interesting topics.",
+        "isHome": false,
+        "parentViewId": null,
+        "content": {},
+        "createdAt": null,
+        "updatedAt": "2026-01-27 09:18:38",
+        "components": [
+          {
+            "id": "comp-blog-postslist",
+            "type": "BlogPostsList",
+            "parentId": "view-blog",
+            "config": {
+              "showTags": true,
+              "showSearch": false
+            },
+            "visible": true
+          }
+        ]
+      },
+      {
+        "id": "view-experience",
+        "type": "View",
+        "parentId": "views",
+        "path": "/experience",
+        "name": "Experience",
+        "title": "Experience",
+        "browserTitle": "Experience",
+        "description": "",
+        "isHome": false,
+        "parentViewId": null,
+        "content": {},
+        "createdAt": null,
+        "updatedAt": "2026-01-27 09:18:38",
+        "components": [
+          {
+            "id": "comp-experience-list",
+            "type": "ExperienceList",
+            "parentId": "view-experience",
+            "config": {
+              "name": "Experience",
+              "showName": true,
+              "collapsible": true,
+              "defaultExpanded": true,
+              "showAddButton": true
+            },
+            "visible": true
+          }
+        ]
+      }
+    ]
   }
 }

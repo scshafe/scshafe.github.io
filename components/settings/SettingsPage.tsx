@@ -5,25 +5,29 @@ import Link from 'next/link';
 import { useAuthorMode } from '@/components/author/DevModeProvider';
 import { NavigationTab } from './NavigationTab';
 import { ThemeTab } from './ThemeTab';
+import { ViewsTab } from './ViewsTab';
 import type { NavigationConfig } from '@/lib/content/navigation';
 import type { ThemeConfig, ThemeColors } from '@/lib/content/themes';
+import type { ViewsConfig } from '@/lib/content/views';
 import { DEFAULT_THEMES, themeToCssVars, getThemeColors } from '@/lib/content/themes';
 
 interface SettingsPageProps {
   initialNavConfig: NavigationConfig;
   initialThemeConfig: ThemeConfig;
+  initialViewsConfig: ViewsConfig;
 }
 
-type TabId = 'navigation' | 'theme';
+type TabId = 'views' | 'navigation' | 'theme';
 
 const tabs: { id: TabId; label: string }[] = [
+  { id: 'views', label: 'Views' },
   { id: 'navigation', label: 'Navigation' },
   { id: 'theme', label: 'Theme' },
 ];
 
-export function SettingsPage({ initialNavConfig, initialThemeConfig }: SettingsPageProps) {
+export function SettingsPage({ initialNavConfig, initialThemeConfig, initialViewsConfig }: SettingsPageProps) {
   const { isAuthorMode } = useAuthorMode();
-  const [activeTab, setActiveTab] = useState<TabId>('navigation');
+  const [activeTab, setActiveTab] = useState<TabId>('views');
 
   // Apply theme changes dynamically
   const handleThemeChange = useCallback((colors: ThemeColors) => {
@@ -136,6 +140,9 @@ export function SettingsPage({ initialNavConfig, initialThemeConfig }: SettingsP
 
       {/* Tab Content */}
       <div className="pb-12">
+        {activeTab === 'views' && (
+          <ViewsTab initialConfig={initialViewsConfig} />
+        )}
         {activeTab === 'navigation' && (
           <NavigationTab initialConfig={initialNavConfig} />
         )}

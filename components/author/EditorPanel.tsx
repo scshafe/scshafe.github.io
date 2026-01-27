@@ -18,6 +18,7 @@ export function EditorPanel() {
   const [error, setError] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [isNew, setIsNew] = useState(false);
+  const [allTags, setAllTags] = useState<string[]>([]);
 
   // Track changes
   useEffect(() => {
@@ -55,6 +56,19 @@ export function EditorPanel() {
           setHasChanges(false);
         } else {
           setError('Failed to load content. Is the dev editor server running?');
+        }
+
+        // Fetch all tags for autocomplete (for posts)
+        if (editingContent.type === 'post') {
+          try {
+            const tagsRes = await fetch(`${DEV_EDITOR_URL}/tags`);
+            if (tagsRes.ok) {
+              const tagsData = await tagsRes.json();
+              setAllTags(tagsData.tags || []);
+            }
+          } catch {
+            // Tags autocomplete is optional, don't show error
+          }
         }
       } catch {
         setError('Cannot connect to dev editor server. Run: npm run dev:editor');
@@ -196,6 +210,7 @@ export function EditorPanel() {
                 frontmatter={frontmatter}
                 onChange={setFrontmatter}
                 contentType={editingContent.type}
+                allTags={allTags}
               />
               <MarkdownEditor content={content} onChange={setContent} />
             </>

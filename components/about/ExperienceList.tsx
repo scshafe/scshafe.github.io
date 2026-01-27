@@ -7,9 +7,8 @@ import { useAuthorMode } from '@/components/author/DevModeProvider';
 interface Experience {
   id: string;
   frontmatter: {
-    title: string;
+    title: string; // Now represents "Role"
     company?: string;
-    role?: string;
     startDate?: string;
     endDate?: string;
     image?: string;
@@ -158,7 +157,6 @@ export function ExperienceList({ experiences: initialExperiences }: ExperienceLi
                 id={exp.id}
                 title={exp.frontmatter.title}
                 company={exp.frontmatter.company}
-                role={exp.frontmatter.role}
                 startDate={exp.frontmatter.startDate}
                 endDate={exp.frontmatter.endDate}
                 image={exp.frontmatter.image}

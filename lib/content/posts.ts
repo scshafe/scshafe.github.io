@@ -1,3 +1,12 @@
+/**
+ * Posts Content Utilities
+ *
+ * Server-side functions for loading blog posts.
+ * - In development: fetches metadata from Flask API (localhost:3001)
+ * - In production: reads metadata from metadata.json (generated at build time)
+ * - Markdown files are always read from disk
+ */
+
 import fs from 'fs';
 import path from 'path';
 import { processMarkdown } from './markdown';
@@ -7,25 +16,96 @@ const contentDirectory = path.join(process.cwd(), 'content');
 const postsDirectory = path.join(contentDirectory, 'posts');
 const metadataPath = path.join(contentDirectory, 'metadata.json');
 
+// Check if we're in development mode
+const isDevelopment = process.env.NODE_ENV === 'development';
+const API_BASE_URL = 'http://localhost:3001';
+
+// New posts structure with items
+interface PostItem extends PostFrontMatter {
+  id: string;
+  type: 'Post';
+  parentId: string;
+  slug: string;
+}
+
+interface PostsConfig {
+  id: string;
+  type: 'Posts';
+  items: Record<string, PostItem>;
+}
+
+// Legacy posts structure
+type LegacyPostsConfig = Record<string, PostFrontMatter>;
+
 interface Metadata {
-  posts: Record<string, PostFrontMatter>;
-  experiences: { order: string[]; [key: string]: unknown };
+  posts: PostsConfig | LegacyPostsConfig;
+  experiences: { order: string[]; items?: Record<string, unknown>; [key: string]: unknown };
   about: { title: string; description: string };
   home: { title: string; description: string };
 }
 
-function loadMetadata(): Metadata {
+/**
+ * Load metadata from JSON file (production only)
+ */
+function loadMetadataFromFile(): Metadata {
   try {
     const content = fs.readFileSync(metadataPath, 'utf8');
     return JSON.parse(content);
   } catch {
     return {
-      posts: {},
+      posts: { id: 'posts', type: 'Posts', items: {} },
       experiences: { order: [] },
       about: { title: 'About', description: '' },
       home: { title: 'Home', description: '' },
     };
   }
+}
+
+/**
+ * Fetch metadata from Flask API (development only)
+ */
+async function fetchMetadataFromAPI(): Promise<Metadata> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/metadata`, {
+      cache: 'no-store', // Always get fresh data in dev
+    });
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.warn('Failed to fetch from API, falling back to file:', error);
+    // Fallback to file if API is not available
+    return loadMetadataFromFile();
+  }
+}
+
+/**
+ * Load metadata - uses API in dev, file in production
+ */
+async function loadMetadata(): Promise<Metadata> {
+  if (isDevelopment) {
+    return fetchMetadataFromAPI();
+  }
+  return loadMetadataFromFile();
+}
+
+/**
+ * Helper to get posts record from metadata (supports both new and legacy formats)
+ */
+function getPostsRecord(posts: PostsConfig | LegacyPostsConfig): Record<string, PostFrontMatter> {
+  // New format has 'items' property
+  if ('items' in posts && typeof posts.items === 'object') {
+    const result: Record<string, PostFrontMatter> = {};
+    for (const [, post] of Object.entries(posts.items)) {
+      if (post.slug) {
+        result[post.slug] = post;
+      }
+    }
+    return result;
+  }
+  // Legacy format - posts directly keyed by slug
+  return posts as LegacyPostsConfig;
 }
 
 function parseCategories(categories: string | string[] | undefined): string[] {
@@ -57,7 +137,8 @@ export async function getAllPosts(): Promise<Post[]> {
     return [];
   }
 
-  const metadata = loadMetadata();
+  const metadata = await loadMetadata();
+  const postsRecord = getPostsRecord(metadata.posts);
   const filenames = fs.readdirSync(postsDirectory);
   const markdownFiles = filenames.filter((name) => name.endsWith('-post.md'));
 
@@ -65,7 +146,7 @@ export async function getAllPosts(): Promise<Post[]> {
 
   for (const filename of markdownFiles) {
     const slug = getSlugFromFilename(filename);
-    const postMetadata = metadata.posts[slug];
+    const postMetadata = postsRecord[slug];
 
     // Skip files without metadata
     if (!postMetadata || !postMetadata.title || !postMetadata.date) {
@@ -119,6 +200,32 @@ export async function getAllCategories(): Promise<string[]> {
     post.categories.forEach((cat) => categories.add(cat.toLowerCase()));
   });
   return Array.from(categories).sort();
+}
+
+export interface TagWithCount {
+  tag: string;
+  count: number;
+}
+
+export async function getTagsWithCounts(): Promise<TagWithCount[]> {
+  const posts = await getPublishedPosts();
+  const tagCounts = new Map<string, { original: string; count: number }>();
+
+  posts.forEach((post) => {
+    post.categories.forEach((tag) => {
+      const lower = tag.toLowerCase();
+      const existing = tagCounts.get(lower);
+      if (existing) {
+        existing.count++;
+      } else {
+        tagCounts.set(lower, { original: tag, count: 1 });
+      }
+    });
+  });
+
+  return Array.from(tagCounts.values())
+    .map(({ original, count }) => ({ tag: original, count }))
+    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
 }
 
 export async function getSeriesMap(): Promise<Map<string, Series>> {
