@@ -8,6 +8,7 @@
     "author": "npm run author:server & npm run dev",
     "prebuild": "node scripts/generate-feed.mjs",
     "build": "next build",
+    "postbuild": "cp out/index.html ./index.html",
     "start": "next start",
     "lint": "eslint",
     "preview": "npx serve out"
