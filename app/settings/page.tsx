@@ -1,7 +1,7 @@
 import { getNavigationConfig } from '@/lib/content/navigation';
 import { getThemeConfig } from '@/lib/content/themes.server';
 import { getViewsConfig } from '@/lib/content/views.server';
-import { SettingsPage } from '@/components/settings/SettingsPage';
+import { SettingsPage } from '@/app/components/settings/SettingsPage';
 
 export const metadata = {
   title: 'Settings - Author Mode',

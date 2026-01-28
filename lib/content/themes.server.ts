@@ -5,16 +5,16 @@ import type { ThemeConfig, ThemePair } from './themes';
 import { DEFAULT_THEMES } from './themes';
 
 const contentDirectory = path.join(process.cwd(), 'content');
-const metadataPath = path.join(contentDirectory, 'metadata.json');
+const settingsPath = path.join(contentDirectory, 'settings.json');
 
-interface Metadata {
+interface Settings {
   themes?: ThemeConfig;
   [key: string]: unknown;
 }
 
-function loadMetadata(): Metadata {
+function loadSettings(): Settings {
   try {
-    const content = fs.readFileSync(metadataPath, 'utf8');
+    const content = fs.readFileSync(settingsPath, 'utf8');
     return JSON.parse(content);
   } catch {
     return {};
@@ -22,8 +22,8 @@ function loadMetadata(): Metadata {
 }
 
 export function getThemeConfig(): ThemeConfig {
-  const metadata = loadMetadata();
-  return metadata.themes || {
+  const settings = loadSettings();
+  return settings.themes || {
     activeThemeId: 'midnight-blue',
     colorSchemePreference: 'system',
     customThemes: [],

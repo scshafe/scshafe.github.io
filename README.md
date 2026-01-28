@@ -6,30 +6,35 @@ A static blog built with Next.js and a configurable Views system. Features an au
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        Development                               │
+│                     Author Mode (Development)                    │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │   ┌──────────────┐         ┌──────────────┐                     │
 │   │   Next.js    │◄───────►│ Flask Server │                     │
 │   │  (port 3000) │  API    │ (port 3001)  │                     │
 │   └──────────────┘         └──────┬───────┘                     │
-│         │                         │                              │
-│         │ reads                   │ reads/writes                 │
-│         ▼                         ▼                              │
-│   ┌──────────────┐         ┌──────────────┐                     │
-│   │metadata.json │◄────────│   blog.db    │                     │
-│   │  (generated) │  export │   (SQLite)   │                     │
-│   └──────────────┘         └──────────────┘                     │
+│                                   │                              │
+│                                   │ reads/writes                 │
+│                                   ▼                              │
+│                            ┌──────────────┐                     │
+│                            │  data.json   │                     │
+│                            │ settings.json│                     │
+│                            └──────────────┘                     │
+│                                                                  │
+│   metadata.json is NOT used during development                   │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
-│                         Production                               │
+│                     Publish Mode (Production)                    │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
+│   Build Process:                                                 │
+│   JSON files ──export──► metadata.json ──build──► Static HTML   │
+│                                                                  │
+│   Served:                                                        │
 │   ┌──────────────┐                                              │
-│   │ Static HTML  │  ◄── Served from /out directory              │
-│   │    /out/     │                                              │
+│   │ Static HTML  │  ◄── /out directory                          │
 │   └──────────────┘                                              │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
@@ -74,32 +79,45 @@ This starts:
 
 Navigate to [http://localhost:3000/settings](http://localhost:3000/settings) to edit content.
 
+### Starting Fresh
+
+Reset data to seed state and start authoring:
+
+```bash
+npm run data:reset
+npm run author
+```
+
 ## Project Structure
 
 ```
 .
 ├── app/                    # Next.js App Router pages
 │   ├── [[...viewPath]]/    # Dynamic catch-all for views
+│   ├── components/         # React components
+│   │   ├── views/          # View system components
+│   │   ├── layout/         # Header, Footer
+│   │   ├── posts/          # Blog post components
+│   │   └── settings/       # Settings UI components
 │   ├── posts/[slug]/       # Blog post pages
 │   ├── category/[category]/# Category filter pages
 │   └── settings/           # Author mode settings
 ├── backend/                # Python Flask server
 │   ├── server.py           # Main API server
-│   ├── database.py         # SQLite database module
-│   ├── migrate_to_sqlite.py# One-time migration script
-│   └── export_metadata.py  # Exports DB to JSON for builds
-├── components/             # React components
-│   ├── views/              # View system components
-│   ├── layout/             # Header, Footer
-│   ├── posts/              # Blog post components
-│   └── settings/           # Settings UI components
+│   ├── database.py         # JSON database module
+│   ├── export_metadata.py  # Exports JSON to metadata.json
+│   └── reset_and_seed.py   # Reset data to seed state
 ├── content/                # Content storage
-│   ├── blog.db             # SQLite database (source of truth)
-│   ├── metadata.json       # Generated from DB at build time
-│   ├── posts/              # Markdown post files
-│   └── experiences/        # Experience markdown files
+│   ├── data.json           # JSON database (source of truth)
+│   ├── seed_data.json      # Template for resetting data
+│   ├── settings.json       # Theme and navigation settings
+│   ├── reseed_settings.json# Template for resetting settings
+│   ├── metadata.json       # Generated at build time only
+│   └── posts/              # Markdown post files
+├── example_data/           # Example data files for reference
 ├── lib/                    # Shared utilities
-│   └── content/            # Content loading functions
+│   ├── content/            # Content loading functions
+│   └── store/              # Redux store and slices
 ├── public/                 # Static assets
 │   ├── images/             # Image files
 │   └── pdfs/               # PDF files
@@ -110,20 +128,21 @@ Navigate to [http://localhost:3000/settings](http://localhost:3000/settings) to 
 
 ### Source of Truth
 
-- **SQLite database** (`content/blog.db`) is the source of truth for all metadata
-- **Markdown files** (`content/posts/*.md`, `content/experiences/*.md`) store content
-- **metadata.json** is only generated at build time (not used during development)
+- **JSON database** (`content/data.json`) is the source of truth for views, components, posts
+- **Settings JSON** (`content/settings.json`) stores theme and navigation
+- **Markdown files** (`content/posts/*.md`) store post content
+- **metadata.json** is ONLY generated at build time, never read/written during development
 
 ### During Development
 
-1. Flask server reads/writes to SQLite database
-2. Next.js fetches data from Flask API (`http://localhost:3001`)
-3. **metadata.json is NOT read or written** during development
+1. Next.js fetches data from Flask API (`http://localhost:3001`)
+2. Flask server reads/writes to JSON files
+3. **metadata.json is completely bypassed**
 
 ### During Build
 
 1. `npm run build` triggers prebuild script
-2. Prebuild exports SQLite → `metadata.json`
+2. Prebuild exports JSON → `metadata.json`
 3. Next.js generates static HTML from `metadata.json`
 4. Output goes to `/out` directory
 
@@ -131,13 +150,17 @@ Navigate to [http://localhost:3000/settings](http://localhost:3000/settings) to 
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start Next.js dev server only |
+| `npm run dev` | Start Next.js dev server only (read-only) |
 | `npm run author` | Start both Next.js and Flask servers |
 | `npm run author:server` | Start Flask server only |
 | `npm run build` | Build static site (exports metadata first) |
 | `npm run preview` | Preview built site locally |
-| `npm run export:metadata` | Export SQLite to metadata.json |
-| `npm run migrate` | Migrate metadata.json to SQLite (one-time) |
+| `npm run export:metadata` | Export data.json to metadata.json |
+| `npm run data:reset` | Reset data.json and settings.json to seed state |
+| `npm run data:reset-data` | Reset only data.json |
+| `npm run data:reset-settings` | Reset only settings.json |
+| `npm run data:reset-interactive` | Interactive reset with step-by-step options |
+| `npm run lint` | Run ESLint |
 
 ## Building for Production
 
@@ -150,7 +173,7 @@ npm run preview
 ```
 
 The build process:
-1. Exports metadata from SQLite to JSON
+1. Exports metadata from JSON files
 2. Generates RSS feed
 3. Builds static HTML to `/out`
 4. Copies `index.html` to root for GitHub Pages
@@ -175,8 +198,6 @@ For any static hosting, serve:
 ├── index.html              # Root redirect/entry
 └── out/                    # All static assets
     ├── index.html
-    ├── blog/
-    ├── experience/
     ├── posts/
     ├── category/
     ├── settings/
@@ -187,52 +208,80 @@ For any static hosting, serve:
 
 Or serve the contents of `/out` directly as the root.
 
-## Database Schema
-
-The SQLite database contains these tables:
-
-| Table | Purpose |
-|-------|---------|
-| `themes` | Theme configuration |
-| `navigation` | Site name and nav config |
-| `nav_links` | Header and footer links |
-| `posts` | Blog post metadata |
-| `experiences` | Work experience entries |
-| `views` | Page configurations |
-| `view_components` | Components within views |
-| `settings` | Key-value settings |
-
 ## Views System
 
 The site uses a configurable "Views" system instead of hardcoded pages:
 
 - **Views** define pages with paths, titles, and components
-- **Components** are building blocks (Title, MarkdownEditor, BlogPostsList, etc.)
+- **Components** are building blocks for content
 - Configure views in Settings → Views tab
+- One view marked as `isHome: true` serves as the root `/` page
+
+### Node Architecture
+
+All views and components implement the **Node** interface for tree-based organization:
+
+```typescript
+interface Node {
+  id: string;           // Unique identifier
+  parentId: string | null;  // Parent node ID
+  previousId: string | null; // Previous sibling for ordering
+}
+```
+
+This enables:
+- Tree traversal (children, siblings, ancestors, descendants)
+- Linked-list ordering via `previousId` chains
+- Consistent CRUD operations across all entities
 
 ### Available Components
 
-- Title - Page title display
-- MarkdownEditor - Editable markdown content
-- BlogPostsList - List of blog posts
-- ExperienceList - Work experience cards
-- PDFViewer - Embedded PDF display
-- Alert - Info/warning boxes
-- And more...
+| Component | Description |
+|-----------|-------------|
+| Title | Page title display |
+| MarkdownEditor | Editable markdown content |
+| Information | Info box with icon |
+| Alert | Warning/info alert boxes |
+| List | Container for child items (BlogPost, Experience, View, Tag) |
+| BlogPost | Single blog post card (used inside List) |
+| Experience | Work experience card (used inside List) |
+| View | Link to another view (used inside List) |
+| Tag | Category/tag link (used inside List) |
+| PDFViewer | Embedded PDF display |
+| MultiMedia | Image/media display |
 
-## Migrating Existing Data
+### List Component Types
 
-If you have an existing `metadata.json` and need to populate the SQLite database:
+The List component is a polymorphic container that can hold different item types:
 
-```bash
-npm run migrate
-```
+- `listType: "BlogPost"` - Contains BlogPost items
+- `listType: "Experience"` - Contains Experience items
+- `listType: "View"` - Contains View link items
+- `listType: "Tag"` - Contains Tag items
 
-This reads `metadata.json` and creates `content/blog.db`.
+## Data Structure (data.json)
+
+| Section | Purpose |
+|---------|---------|
+| `views` | Page configurations keyed by ID |
+| `components` | Components keyed by ID |
+| `relationships` | Parent-child links for nesting |
+| `posts` | Blog post metadata keyed by ID |
+| `content` | Markdown content keyed by owner ID |
+| `settings` | Key-value settings |
+
+## Reserved Paths
+
+These paths are reserved and cannot be used for views:
+- `/settings` - Settings page
+- `/posts/[slug]` - Individual blog posts
+- `/category/[category]` - Category filter pages
+- `/feed.xml` - RSS feed
 
 ## Development Notes
 
 - The Flask server is only needed for editing content
 - Static builds work without Python installed
-- All content changes persist to SQLite immediately
-- The JSON export happens automatically on save and at build time
+- All content changes persist to JSON immediately
+- Redux Toolkit manages frontend state
+- Components support inline editing in author mode

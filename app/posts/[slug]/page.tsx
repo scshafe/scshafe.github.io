@@ -1,22 +1,28 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getAllPosts, getPostsInSeries } from '@/lib/content/posts';
-import TableOfContents from '@/components/posts/TableOfContents';
-import SeriesBanner from '@/components/posts/SeriesBanner';
-import { EditablePostPage } from '@/components/pages';
+import TableOfContents from '@/app/components/posts/TableOfContents';
+import SeriesBanner from '@/app/components/posts/SeriesBanner';
+import { EditablePostPage } from '@/app/components/pages';
+
+// Allow empty params array when there are no posts
+export const dynamicParams = false;
+
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  try {
+    const posts = await getAllPosts();
+    return posts.map((post) => ({
+      slug: post.slug,
+    }));
+  } catch {
+    return [];
+  }
+}
 
 interface PostPageProps {
   params: Promise<{
     slug: string;
   }>;
-}
-
-export async function generateStaticParams() {
-  const posts = await getAllPosts();
-
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
 }
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {

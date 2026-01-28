@@ -1,0 +1,65 @@
+{
+  "components": [
+    {
+      "id": "comp-home-title",
+      "type": "Title",
+      "config": {},
+      "parentId": "view-home",
+      "previousId": null
+    },
+    {
+      "id": "comp-home-intro",
+      "type": "MarkdownEditor",
+      "config": {
+        "contentKey": "home-intro"
+      },
+      "parentId": "view-home",
+      "previousId": "comp-home-title"
+    },
+    {
+      "id": "comp-home-posts",
+      "type": "List",
+      "config": {
+        "listType": "BlogPost",
+        "displayMode": "list",
+        "name": "Recent Posts",
+        "showName": true,
+        "collapsible": false,
+        "defaultExpanded": true,
+        "showAddButton": true,
+        "maxItems": 3
+      },
+      "children": [
+        {
+          "id": "comp-home-post-getting-started",
+          "type": "BlogPost",
+          "config": {
+            "postSlug": "getting-started",
+            "showExcerpt": true,
+            "showDate": true,
+            "showTags": true
+          },
+          "parentId": "comp-home-posts",
+          "previousId": null
+        },
+        {
+          "id": "comp-home-post-hello-world",
+          "type": "BlogPost",
+          "config": {
+            "postSlug": "hello-world",
+            "showExcerpt": true,
+            "showDate": true,
+            "showTags": true
+          },
+          "parentId": "comp-home-posts",
+          "previousId": "comp-home-post-getting-started"
+        }
+      ],
+      "parentId": "view-home",
+      "previousId": "comp-home-intro"
+    }
+  ],
+  "content": {
+    "home-intro": "Welcome to my blog! This is where I share my thoughts, projects, and learnings.\n\n## What You'll Find Here\n\n- **Technical tutorials** - Step-by-step guides on various topics\n- **Project updates** - Progress on things I'm building\n- **Thoughts and reflections** - Ideas and observations\n\nFeel free to explore and reach out if you have any questions!"
+  }
+}

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getViewsConfig, resolveViewByPath, getAllViewPaths } from '@/lib/content/views.server';
-import { ViewPageClient } from '@/components/views/ViewPageClient';
+import { ViewPageClient } from '@/app/components/views/ViewPageClient';
 
 interface ViewPageProps {
   params: Promise<{

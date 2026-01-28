@@ -1,0 +1,56 @@
+{
+  "components": [
+    {
+      "id": 3000000201,
+      "type": "Title",
+      "config": {},
+      "parentId": 1000000030,
+      "previousId": null
+    },
+    {
+      "id": 3000000202,
+      "type": "MarkdownEditor",
+      "config": {
+        "contentKey": "about-intro"
+      },
+      "parentId": 1000000030,
+      "previousId": 3000000201
+    },
+    {
+      "id": 3000000203,
+      "type": "List",
+      "config": {
+        "listType": "Experience",
+        "displayMode": "list",
+        "name": "Experience",
+        "showName": true,
+        "collapsible": false,
+        "defaultExpanded": true,
+        "showAddButton": true
+      },
+      "children": [
+        {
+          "id": 3000000204,
+          "type": "Experience",
+          "config": {
+            "title": "Software Engineer",
+            "company": "Example Company",
+            "startDate": "2022-01",
+            "endDate": "Present",
+            "image": "",
+            "backgroundColor": "#1a1a2e",
+            "textColor": "#ffffff",
+            "accentColor": "#4a9eff"
+          },
+          "parentId": 3000000203,
+          "previousId": null
+        }
+      ],
+      "parentId": 1000000030,
+      "previousId": 3000000202
+    }
+  ],
+  "content": {
+    "about-intro": "# About Me\n\nHi there! I'm a developer who loves building things and learning new technologies.\n\n## Background\n\nI have experience in web development, systems programming, and various other areas of software engineering.\n\n## Interests\n\n- Open source software\n- Developer tools\n- Technical writing\n- Learning new programming languages\n\n## Experience\n\nBelow you'll find some of my professional experience:"
+  }
+}

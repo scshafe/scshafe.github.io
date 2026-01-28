@@ -6,7 +6,24 @@
       "Bash(npm run build:*)",
       "Bash(python3:*)",
       "Bash(npm run export:metadata:*)",
-      "Bash(npm run db:reset:*)"
+      "Bash(npm run db:reset:*)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(NEXT_TURBOPACK=0 npx next build:*)",
+      "Bash(sqlite3:*)",
+      "Bash(cat:*)",
+      "Bash(npx next info:*)",
+      "Bash(timeout 15 npm run dev)",
+      "Bash(npm run data:reset:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run lint:*)",
+      "Bash(for file in home blog about experiences markdown themes)",
+      "Bash(do if grep -r \"from.*lib/content/$file\" /Users/coleshaffer/personal/scshafe.github.io --include=\"*.tsx\" --include=\"*.ts\")",
+      "Bash(then)",
+      "Bash(echo:*)",
+      "Bash(else)",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(grep:*)"
     ]
   }
 }

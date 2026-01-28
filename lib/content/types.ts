@@ -1,7 +1,7 @@
 export interface PostFrontMatter {
   layout: 'post' | 'page' | 'home' | 'hidden';
   title: string;
-  date: string;
+  date: number; // Ticks (milliseconds since epoch)
   categories?: string | string[];
   toc?: boolean;
   is_series?: boolean;

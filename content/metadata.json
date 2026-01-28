@@ -2,65 +2,52 @@
   "themes": {
     "id": "themes",
     "type": "Themes",
-    "activeThemeId": "ocean-depths",
-    "colorSchemePreference": "light",
+    "activeThemeId": "midnight-blue",
+    "colorSchemePreference": "system",
     "customThemes": []
   },
   "navigation": {
-    "id": "navigation",
-    "type": "Navigation",
-    "siteName": "Cole",
+    "siteName": "My Blog",
     "header": [
       {
-        "id": "nav-header-blog",
-        "type": "NavLink",
-        "parentId": "navigation",
+        "id": "nav-home",
+        "label": "Home",
+        "linkType": "view",
+        "url": "/",
+        "position": "left",
+        "icon": null,
+        "external": false,
+        "viewId": "view-home"
+      },
+      {
+        "id": "nav-blog",
         "label": "Blog",
-        "url": "/blog/",
+        "linkType": "view",
+        "url": "/blog",
         "position": "left",
         "icon": null,
-        "external": false
+        "external": false,
+        "viewId": "view-blog"
       },
       {
-        "id": "nav-header-experience",
-        "type": "NavLink",
-        "parentId": "navigation",
-        "label": "Experience",
-        "url": "/experience/",
-        "position": "left",
-        "icon": null,
-        "external": false
-      },
-      {
-        "id": "nav-header-github",
-        "type": "NavLink",
-        "parentId": "navigation",
-        "label": "scshafe",
-        "url": "https://github.com/scshafe",
+        "id": "nav-about",
+        "label": "About",
+        "linkType": "view",
+        "url": "/about",
         "position": "right",
-        "icon": "github",
-        "external": true
+        "icon": null,
+        "external": false,
+        "viewId": "view-about"
       }
     ],
     "footer": [
       {
-        "id": "nav-footer-rss",
-        "type": "NavLink",
-        "parentId": "navigation",
-        "label": "RSS Feed",
-        "url": "/feed.xml",
-        "position": "left",
-        "icon": "rss",
-        "external": false
-      },
-      {
-        "id": "nav-footer-github",
-        "type": "NavLink",
-        "parentId": "navigation",
+        "id": "nav-github",
         "label": "GitHub",
-        "url": "https://github.com/scshafe",
+        "linkType": "url",
+        "url": "https://github.com",
         "position": "left",
-        "icon": "github",
+        "icon": null,
         "external": true
       }
     ]
@@ -69,87 +56,34 @@
     "id": "posts",
     "type": "Posts",
     "items": {
-      "post-terminal-key-encoding": {
-        "id": "post-terminal-key-encoding",
+      "post-getting-started": {
+        "id": "post-getting-started",
         "type": "Post",
         "parentId": "posts",
-        "slug": "terminal-key-encoding",
-        "title": "Character Encoding in the Virtual Console and Terminals",
-        "date": "2025-04-01T13:00:00-0700",
+        "slug": "getting-started",
+        "title": "Getting Started with This Blog",
+        "date": "2024-01-15",
         "categories": [
-          "tty"
-        ],
-        "layout": "post",
-        "toc": false,
-        "is_series": false,
-        "series_title": null
-      },
-      "post-cross-compile-cmake-pkgconfig-bbb": {
-        "id": "post-cross-compile-cmake-pkgconfig-bbb",
-        "type": "Post",
-        "parentId": "posts",
-        "slug": "cross-compile-cmake-pkgconfig-bbb",
-        "title": "Developing an application for the Beaglebone Black",
-        "date": "2024-06-18T13:00:00-0700",
-        "categories": [
-          "linux",
-          "cross-compilers",
-          "cmake",
-          "beaglebone-black"
-        ],
-        "layout": "post",
-        "toc": false,
-        "is_series": true,
-        "series_title": "Motion Sensing Nightlight with the Beaglebone Black"
-      },
-      "post-differential-amplifier-voltage-flow": {
-        "id": "post-differential-amplifier-voltage-flow",
-        "type": "Post",
-        "parentId": "posts",
-        "slug": "differential-amplifier-voltage-flow",
-        "title": "Differential Amplifiers Propagating Changes in Inputs",
-        "date": "2024-06-18T13:00:00-0700",
-        "categories": [
-          "differential-amplifiers",
-          "circuits"
-        ],
-        "layout": "hidden",
-        "toc": false,
-        "is_series": false,
-        "series_title": null
-      },
-      "post-configuring-development-workflow": {
-        "id": "post-configuring-development-workflow",
-        "type": "Post",
-        "parentId": "posts",
-        "slug": "configuring-development-workflow",
-        "title": "Setting up a development workflow",
-        "date": "2024-06-18T13:00:00-0700",
-        "categories": [
-          "linux",
-          "cross-compilers",
-          "cmake",
-          "beaglebone-black"
-        ],
-        "layout": "post",
-        "toc": false,
-        "is_series": true,
-        "series_title": "Motion Sensing Nightlight with the Beaglebone Black"
-      },
-      "post-device-tree": {
-        "id": "post-device-tree",
-        "type": "Post",
-        "parentId": "posts",
-        "slug": "device-tree",
-        "title": "Device Model and System Topology",
-        "date": "2023-11-30T13:00:00-0700",
-        "categories": [
-          "device-tree",
-          "driver",
-          "sys"
+          "tutorial",
+          "meta"
         ],
         "layout": "post",
         "toc": true,
+        "is_series": false,
+        "series_title": null
+      },
+      "post-hello-world": {
+        "id": "post-hello-world",
+        "type": "Post",
+        "parentId": "posts",
+        "slug": "hello-world",
+        "title": "Hello World",
+        "date": "2024-01-01",
+        "categories": [
+          "announcement"
+        ],
+        "layout": "post",
+        "toc": false,
         "is_series": false,
         "series_title": null
       }
@@ -159,35 +93,34 @@
     "id": "experiences",
     "type": "Experiences",
     "order": [
-      "exp-operations-and-forward-engineer",
-      "exp-software-engineer"
+      "exp-example-company"
     ],
     "items": {
-      "exp-operations-and-forward-engineer": {
-        "id": "exp-operations-and-forward-engineer",
+      "exp-example-company": {
+        "id": "exp-example-company",
         "type": "Experience",
+        "component_type": "Experience",
         "parentId": "experiences",
-        "title": "Forward Engineer and Operations Lead",
-        "company": "Newton AI",
-        "startDate": "June 2025",
-        "endDate": "Feb 2026",
+        "title": "Software Engineer",
+        "company": "Example Company",
+        "startDate": "2022-01",
+        "endDate": "Present",
         "image": "",
-        "backgroundColor": "",
-        "textColor": "",
-        "accentColor": ""
-      },
-      "exp-software-engineer": {
-        "id": "exp-software-engineer",
-        "type": "Experience",
-        "parentId": "experiences",
-        "title": "Test",
-        "company": "Elektrobit",
-        "startDate": "May 2022",
-        "endDate": "June 2023",
-        "image": "",
-        "backgroundColor": "",
-        "textColor": "",
-        "accentColor": ""
+        "backgroundColor": "#1a1a2e",
+        "textColor": "#ffffff",
+        "accentColor": "#4a9eff",
+        "sort_order": 0,
+        "config": {
+          "title": "Software Engineer",
+          "company": "Example Company",
+          "startDate": "2022-01",
+          "endDate": "Present",
+          "image": "",
+          "backgroundColor": "#1a1a2e",
+          "textColor": "#ffffff",
+          "accentColor": "#4a9eff"
+        },
+        "visible": true
       }
     }
   },
@@ -199,96 +132,216 @@
       {
         "id": "view-home",
         "type": "View",
+        "view_type": "page",
+        "viewType": "page",
+        "url_id": null,
+        "urlId": null,
         "parentId": "views",
         "path": "/",
-        "name": "home",
-        "title": "Hi, I'm Cole",
-        "browserTitle": "Cole",
-        "description": "software engineer. AI.",
+        "name": "Home",
+        "title": "Welcome",
+        "browserTitle": "Home | My Blog",
+        "description": "Welcome to my personal blog",
         "isHome": true,
         "parentViewId": null,
         "content": {
-          "main": "# Welcome to scshafe's Blog\n\nThis blog is my attempt to publish my own study notes on interesting topics. I hope they can help contribute to your own journey of learning!\n\n# Hello \n\nBrowse the posts below to explore topics in software engineering, embedded systems, and more."
+          "home-intro": "Welcome to my blog! This is where I share my thoughts, projects, and learnings.\n\n## What You'll Find Here\n\n- **Technical tutorials** - Step-by-step guides on various topics\n- **Project updates** - Progress on things I'm building\n- **Thoughts and reflections** - Ideas and observations\n\nFeel free to explore and reach out if you have any questions!"
         },
-        "createdAt": null,
-        "updatedAt": "2026-01-27 09:18:38",
         "components": [
           {
             "id": "comp-home-title",
             "type": "Title",
+            "config": {},
             "parentId": "view-home",
-            "config": {
-              "showTitle": true,
-              "level": "h1"
-            },
-            "visible": true
+            "previousId": null
           },
           {
-            "id": "comp-home-content",
+            "id": "comp-home-intro",
             "type": "MarkdownEditor",
-            "parentId": "view-home",
             "config": {
-              "contentKey": "main",
-              "placeholder": "Add page content..."
+              "contentKey": "home-intro"
             },
-            "visible": true
+            "parentId": "view-home",
+            "previousId": "comp-home-title"
+          },
+          {
+            "id": "comp-home-posts",
+            "type": "List",
+            "config": {
+              "listType": "BlogPost",
+              "displayMode": "list",
+              "name": "Recent Posts",
+              "showName": true,
+              "collapsible": false,
+              "defaultExpanded": true,
+              "showAddButton": true,
+              "maxItems": 3
+            },
+            "children": [
+              {
+                "id": "comp-home-post-getting-started",
+                "type": "BlogPost",
+                "config": {
+                  "postSlug": "getting-started",
+                  "showExcerpt": true,
+                  "showDate": true,
+                  "showTags": true
+                },
+                "parentId": "comp-home-posts",
+                "previousId": null
+              },
+              {
+                "id": "comp-home-post-hello-world",
+                "type": "BlogPost",
+                "config": {
+                  "postSlug": "hello-world",
+                  "showExcerpt": true,
+                  "showDate": true,
+                  "showTags": true
+                },
+                "parentId": "comp-home-posts",
+                "previousId": "comp-home-post-getting-started"
+              }
+            ],
+            "parentId": "view-home",
+            "previousId": "comp-home-intro"
+          }
+        ]
+      },
+      {
+        "id": "view-about",
+        "type": "View",
+        "view_type": "page",
+        "viewType": "page",
+        "url_id": null,
+        "urlId": null,
+        "parentId": "views",
+        "path": "/about",
+        "name": "About",
+        "title": "About Me",
+        "browserTitle": "About | My Blog",
+        "description": "Learn more about me",
+        "isHome": false,
+        "parentViewId": null,
+        "content": {
+          "about-intro": "# About Me\n\nHi there! I'm a developer who loves building things and learning new technologies.\n\n## Background\n\nI have experience in web development, systems programming, and various other areas of software engineering.\n\n## Interests\n\n- Open source software\n- Developer tools\n- Technical writing\n- Learning new programming languages\n\n## Experience\n\nBelow you'll find some of my professional experience:"
+        },
+        "components": [
+          {
+            "id": "comp-about-title",
+            "type": "Title",
+            "config": {},
+            "parentId": "view-about",
+            "previousId": null
+          },
+          {
+            "id": "comp-about-intro",
+            "type": "MarkdownEditor",
+            "config": {
+              "contentKey": "about-intro"
+            },
+            "parentId": "view-about",
+            "previousId": "comp-about-title"
+          },
+          {
+            "id": "comp-about-experience",
+            "type": "List",
+            "config": {
+              "listType": "Experience",
+              "displayMode": "list",
+              "name": "Experience",
+              "showName": true,
+              "collapsible": false,
+              "defaultExpanded": true,
+              "showAddButton": true
+            },
+            "children": [
+              {
+                "id": "exp-example-company",
+                "type": "Experience",
+                "config": {
+                  "title": "Software Engineer",
+                  "company": "Example Company",
+                  "startDate": "2022-01",
+                  "endDate": "Present",
+                  "image": "",
+                  "backgroundColor": "#1a1a2e",
+                  "textColor": "#ffffff",
+                  "accentColor": "#4a9eff"
+                },
+                "parentId": "comp-about-experience",
+                "previousId": null
+              }
+            ],
+            "parentId": "view-about",
+            "previousId": "comp-about-intro"
           }
         ]
       },
       {
         "id": "view-blog",
         "type": "View",
+        "view_type": "page",
+        "viewType": "page",
+        "url_id": null,
+        "urlId": null,
         "parentId": "views",
         "path": "/blog",
-        "name": "blog",
+        "name": "Blog",
         "title": "Blog",
-        "browserTitle": "Blog - Cole",
-        "description": "Posts about software engineering, embedded systems, and other interesting topics.",
+        "browserTitle": "Blog | My Blog",
+        "description": "Read my latest posts",
         "isHome": false,
         "parentViewId": null,
         "content": {},
-        "createdAt": null,
-        "updatedAt": "2026-01-27 09:18:38",
         "components": [
           {
-            "id": "comp-blog-postslist",
-            "type": "BlogPostsList",
+            "id": "comp-blog-title",
+            "type": "Title",
+            "config": {},
             "parentId": "view-blog",
-            "config": {
-              "showTags": true,
-              "showSearch": false
-            },
-            "visible": true
-          }
-        ]
-      },
-      {
-        "id": "view-experience",
-        "type": "View",
-        "parentId": "views",
-        "path": "/experience",
-        "name": "Experience",
-        "title": "Experience",
-        "browserTitle": "Experience",
-        "description": "",
-        "isHome": false,
-        "parentViewId": null,
-        "content": {},
-        "createdAt": null,
-        "updatedAt": "2026-01-27 09:18:38",
-        "components": [
+            "previousId": null
+          },
           {
-            "id": "comp-experience-list",
-            "type": "ExperienceList",
-            "parentId": "view-experience",
+            "id": "comp-blog-posts",
+            "type": "List",
             "config": {
-              "name": "Experience",
-              "showName": true,
-              "collapsible": true,
+              "listType": "BlogPost",
+              "displayMode": "list",
+              "name": "Blog Posts",
+              "showName": false,
+              "collapsible": false,
               "defaultExpanded": true,
               "showAddButton": true
             },
-            "visible": true
+            "children": [
+              {
+                "id": "comp-blogpost-getting-started",
+                "type": "BlogPost",
+                "config": {
+                  "postSlug": "getting-started",
+                  "showExcerpt": true,
+                  "showDate": true,
+                  "showTags": true
+                },
+                "parentId": "comp-blog-posts",
+                "previousId": null
+              },
+              {
+                "id": "comp-blogpost-hello-world",
+                "type": "BlogPost",
+                "config": {
+                  "postSlug": "hello-world",
+                  "showExcerpt": true,
+                  "showDate": true,
+                  "showTags": true
+                },
+                "parentId": "comp-blog-posts",
+                "previousId": "comp-blogpost-getting-started"
+              }
+            ],
+            "parentId": "view-blog",
+            "previousId": "comp-blog-title"
           }
         ]
       }

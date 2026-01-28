@@ -1,19 +1,26 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getAllCategories, getPostsByCategory } from '@/lib/content/posts';
-import PostCard from '@/components/posts/PostCard';
+import PostCard from '@/app/components/posts/PostCard';
+
+// Allow empty params array when there are no categories
+export const dynamicParams = false;
+
+export async function generateStaticParams(): Promise<{ category: string }[]> {
+  try {
+    const categories = await getAllCategories();
+    return categories.map((category) => ({
+      category: category.toLowerCase(),
+    }));
+  } catch {
+    return [];
+  }
+}
 
 interface CategoryPageProps {
   params: Promise<{
     category: string;
   }>;
-}
-
-export async function generateStaticParams() {
-  const categories = await getAllCategories();
-  return categories.map((category) => ({
-    category: category.toLowerCase(),
-  }));
 }
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {

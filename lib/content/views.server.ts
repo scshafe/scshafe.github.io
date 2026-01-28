@@ -8,10 +8,11 @@
 
 import fs from 'fs';
 import path from 'path';
-import type { View, ViewsConfig } from './views';
+import type { View, ViewsConfig, NodeId } from './views';
 
 const contentDirectory = path.join(process.cwd(), 'content');
 const metadataPath = path.join(contentDirectory, 'metadata.json');
+const settingsPath = path.join(contentDirectory, 'settings.json');
 
 // Check if we're in development mode
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -29,6 +30,49 @@ function loadMetadataFromFile(): Metadata {
   try {
     const content = fs.readFileSync(metadataPath, 'utf8');
     return JSON.parse(content);
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Load settings from settings.json (for development sync reads)
+ * Converts views object to array format expected by ViewsConfig
+ */
+function loadSettingsSync(): Metadata {
+  try {
+    const content = fs.readFileSync(settingsPath, 'utf8');
+    const settings = JSON.parse(content);
+
+    // Convert views from object to array format
+    const viewsObject = settings.views || {};
+    const viewsArray: View[] = Object.values(viewsObject).map((v: unknown, index: number, arr: unknown[]) => {
+      const view = v as Record<string, unknown>;
+      // Get the previous view's id for linking
+      const prevView = index > 0 ? (arr[index - 1] as Record<string, unknown>) : null;
+      return {
+        id: view.id as NodeId,
+        parentId: (view.parentId ?? view.parent_id ?? null) as NodeId | null,
+        previousId: (view.previousId ?? view.previous_id ?? (prevView?.id as NodeId | null) ?? null) as NodeId | null,
+        path: view.path as string,
+        name: view.name as string,
+        title: view.title as string,
+        browserTitle: (view.browser_title || view.browserTitle) as string,
+        description: view.description as string,
+        isHome: (view.is_home || view.isHome) as boolean,
+        parentViewId: (view.parent_view_id ?? view.parentViewId ?? null) as NodeId | null | undefined,
+        components: [],
+        content: {},
+      };
+    });
+
+    return {
+      views: {
+        items: viewsArray,
+        views: viewsArray,
+        defaultHomeViewId: settings.defaultHomeViewId,
+      },
+    };
   } catch {
     return {};
   }
@@ -89,12 +133,27 @@ export async function getViewsConfig(): Promise<ViewsConfig> {
 }
 
 /**
+ * Get views list synchronously (from file only)
+ * Use this in layout.tsx and other places where async is not supported
+ * - Development: reads from settings.json
+ * - Production: reads from metadata.json
+ */
+export function getViewsSync(): View[] {
+  // In development, read from settings.json since metadata.json doesn't exist
+  const metadata = isDevelopment ? loadSettingsSync() : loadMetadataFromFile();
+  const config = metadata.views || { views: [], items: [] };
+  return config.items || config.views || [];
+}
+
+/**
  * Resolve a view by its URL path
  */
 export function resolveViewByPath(
   urlPath: string,
   viewsConfig: ViewsConfig
 ): View | null {
+  const views = getViewsArray(viewsConfig);
+
   // Normalize path
   const normalizedPath =
     urlPath === '/' ? '/' : urlPath.replace(/\/$/, '');
@@ -102,24 +161,24 @@ export function resolveViewByPath(
   // Check for home view first
   if (normalizedPath === '/') {
     // First check for explicit isHome flag
-    const homeView = viewsConfig.views.find((v) => v.isHome === true);
+    const homeView = views.find((v) => v.isHome === true);
     if (homeView) return homeView;
 
     // Fallback to defaultHomeViewId
     if (viewsConfig.defaultHomeViewId) {
       return (
-        viewsConfig.views.find(
+        views.find(
           (v) => v.id === viewsConfig.defaultHomeViewId
         ) || null
       );
     }
 
     // Fallback to view with "/" path
-    return viewsConfig.views.find((v) => v.path === '/') || null;
+    return views.find((v) => v.path === '/') || null;
   }
 
   // Direct path match
-  const directMatch = viewsConfig.views.find(
+  const directMatch = views.find(
     (v) =>
       v.path === normalizedPath || v.path === normalizedPath + '/'
   );
@@ -131,19 +190,21 @@ export function resolveViewByPath(
  * Resolve a view by its ID
  */
 export function resolveViewById(
-  id: string,
+  id: NodeId,
   viewsConfig: ViewsConfig
 ): View | null {
-  return viewsConfig.views.find((v) => v.id === id) || null;
+  const views = getViewsArray(viewsConfig);
+  return views.find((v) => v.id === id) || null;
 }
 
 /**
  * Get all view paths for static generation
- * Note: This is only called during build, so it reads from the file
+ * Note: This reads from metadata.json in production build,
+ * or settings.json in development
  */
 export async function getAllViewPaths(): Promise<string[][]> {
-  // Always use file for static generation (build time)
-  const metadata = loadMetadataFromFile();
+  // Use settings.json in dev, metadata.json in production build
+  const metadata = isDevelopment ? loadSettingsSync() : loadMetadataFromFile();
   const config = metadata.views || { views: [], items: [] };
   const views = config.items || config.views || [];
 
@@ -168,13 +229,14 @@ export interface ViewTreeNode {
  * Build a tree structure from views based on parentViewId
  */
 export function buildViewTree(viewsConfig: ViewsConfig): ViewTreeNode[] {
-  const viewsById = new Map(viewsConfig.views.map((v) => [v.id, v]));
+  const views = getViewsArray(viewsConfig);
+  const viewsById = new Map<NodeId, View>(views.map((v) => [v.id, v]));
   const rootNodes: ViewTreeNode[] = [];
 
   // Find root views (no parent or null parent)
-  for (const view of viewsConfig.views) {
+  for (const view of views) {
     if (!view.parentViewId) {
-      rootNodes.push(buildTreeNode(view, viewsById, viewsConfig.views));
+      rootNodes.push(buildTreeNode(view, viewsById, views));
     }
   }
 
@@ -186,7 +248,7 @@ export function buildViewTree(viewsConfig: ViewsConfig): ViewTreeNode[] {
  */
 function buildTreeNode(
   view: View,
-  viewsById: Map<string, View>,
+  viewsById: Map<NodeId, View>,
   allViews: View[]
 ): ViewTreeNode {
   const children = allViews
@@ -200,10 +262,11 @@ function buildTreeNode(
  * Get child views of a parent view
  */
 export function getChildViews(
-  parentId: string,
+  parentId: NodeId,
   viewsConfig: ViewsConfig
 ): View[] {
-  return viewsConfig.views.filter((v) => v.parentViewId === parentId);
+  const views = getViewsArray(viewsConfig);
+  return views.filter((v) => v.parentViewId === parentId);
 }
 
 /**
@@ -214,7 +277,8 @@ export function getParentView(
   viewsConfig: ViewsConfig
 ): View | null {
   if (!view.parentViewId) return null;
-  return viewsConfig.views.find((v) => v.id === view.parentViewId) || null;
+  const views = getViewsArray(viewsConfig);
+  return views.find((v) => v.id === view.parentViewId) || null;
 }
 
 /**

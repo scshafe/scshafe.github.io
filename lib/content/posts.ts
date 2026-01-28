@@ -117,10 +117,9 @@ function parseCategories(categories: string | string[] | undefined): string[] {
     .filter(Boolean);
 }
 
-function parseDate(dateStr: string): Date {
-  // Handle ISO format or formats like "2023-11-30 13:00:00 -0700"
-  const cleanDate = dateStr.replace(/\s+[-+]\d{4}$/, '');
-  return new Date(cleanDate);
+function parseDate(dateTicks: number): Date {
+  // Date is stored as ticks (milliseconds since epoch)
+  return new Date(dateTicks);
 }
 
 function getSlugFromFilename(filename: string): string {

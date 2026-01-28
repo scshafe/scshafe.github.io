@@ -2,7 +2,7 @@
 """
 Export Metadata Script
 
-Generates metadata.json from the SQLite database.
+Generates metadata.json from the data.json database.
 Run this before building the Next.js static site.
 
 Usage:
@@ -19,7 +19,7 @@ sys.path.insert(0, str(backend_dir))
 from database import export_to_metadata_json, init_database
 
 def main():
-    print("Exporting metadata from SQLite database...")
+    print("Exporting metadata from data.json...")
 
     # Ensure database is initialized
     init_database()
