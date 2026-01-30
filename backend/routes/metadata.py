@@ -9,14 +9,14 @@ from flask import Blueprint, request, jsonify
 from pathlib import Path
 
 from database import (
-    get_all_posts,
-    save_post,
     get_all_experiences,
     save_experience,
     get_all_views,
+    get_all_views_resolved,
     save_view,
     get_default_home_view_id,
     set_default_home_view_id,
+    get_navigation_config,
 )
 
 metadata_bp = Blueprint('metadata', __name__)
@@ -72,13 +72,16 @@ def get_themes_from_settings() -> dict:
 
 
 def get_navigation_from_settings() -> dict:
-    """Get navigation configuration from settings.json."""
-    settings = load_settings()
-    return settings.get('navigation', {
-        'siteName': 'My Blog',
-        'header': [],
-        'footer': []
-    })
+    """Get navigation configuration from split settings structure.
+
+    Uses get_navigation_config() which reads from:
+    - content/settings/site.json (site name)
+    - content/settings/navbar/*.json (header items)
+    - content/settings/footer/*.json (footer items)
+
+    And transforms backend format to frontend format.
+    """
+    return get_navigation_config()
 
 
 def save_themes_to_settings(themes: dict) -> bool:
@@ -102,27 +105,24 @@ def get_metadata():
 
     navigation = get_navigation_from_settings()
 
-    # Build posts structure
-    posts_list = get_all_posts()
-    posts_items = {p['id']: p for p in posts_list}
-
     # Build experiences structure
     exp_list = get_all_experiences()
     exp_items = {e['id']: e for e in exp_list}
     exp_order = [e['id'] for e in exp_list]
 
-    # Build views structure
-    views_list = get_all_views()
+    # Build views structure (resolved to include root_node_id)
+    views_list = get_all_views_resolved()
     default_home_id = get_default_home_view_id()
+
+    # Mark home view with is_home flag
+    if default_home_id:
+        for view in views_list:
+            root_id = view.get('root_node_id') or view.get('node_id')
+            view['is_home'] = (root_id == default_home_id)
 
     return jsonify({
         'themes': themes,
         'navigation': navigation,
-        'posts': {
-            'id': 'posts',
-            'type': 'Posts',
-            'items': posts_items
-        },
         'experiences': {
             'id': 'experiences',
             'type': 'Experiences',
@@ -132,8 +132,8 @@ def get_metadata():
         'views': {
             'id': 'views',
             'type': 'Views',
-            'defaultHomeViewId': default_home_id,
-            'items': views_list
+            'default_home_node_id': default_home_id,
+            'views': views_list
         }
     })
 
@@ -152,13 +152,6 @@ def update_metadata():
         if 'navigation' in data:
             save_navigation_to_settings(data['navigation'])
 
-        # Save posts
-        if 'posts' in data:
-            posts_config = data['posts']
-            items = posts_config.get('items', {})
-            for post_id, post_data in items.items():
-                save_post(post_data)
-
         # Save experiences
         if 'experiences' in data:
             exp_config = data['experiences']
@@ -176,8 +169,10 @@ def update_metadata():
             views_list = views_config.get('items', views_config.get('views', []))
             for view_data in views_list:
                 save_view(view_data)
-            if 'defaultHomeViewId' in views_config:
-                set_default_home_view_id(views_config['defaultHomeViewId'])
+            # Accept both field names for compatibility
+            home_id = views_config.get('default_home_node_id') or views_config.get('default_home_view_id')
+            if home_id is not None:
+                set_default_home_view_id(home_id)
 
         return jsonify({'success': True})
     except Exception as e:

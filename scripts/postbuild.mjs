@@ -5,8 +5,8 @@
  * 1. Copies public directory contents to the output directory
  *
  * Note: Next.js static export already copies public/ to output,
- * but this ensures any files generated during prebuild (like feed.xml)
- * are included even if they were created after the build started.
+ * but this ensures any files generated during prebuild are included
+ * even if they were created after the build started.
  */
 
 import fs from 'fs';

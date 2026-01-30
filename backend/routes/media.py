@@ -130,7 +130,7 @@ def upload_pdf():
         data = request.get_json()
         base64_data = data.get('base64', '')
         filename = data.get('filename', 'document.pdf')
-        component_id = data.get('componentId', '')
+        component_id = data.get('component_id', '')
 
         if not base64_data:
             return jsonify({'error': 'PDF data is required'}), 400

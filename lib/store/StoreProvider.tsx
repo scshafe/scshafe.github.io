@@ -25,7 +25,7 @@ import navigationReducer, { initializeNavigation } from './slices/navigationSlic
 import authorReducer, { initializeAuthorMode } from './slices/authorSlice';
 import type { ThemeConfig } from '@/lib/content/themes';
 import type { NavigationConfig } from '@/lib/content/navigation';
-import type { View } from '@/lib/content/views';
+import type { ResolvedView } from '@/lib/content/types';
 import { getThemeColors } from '@/lib/content/themes';
 import type { ColorSchemePreference } from '@/lib/content/themes';
 
@@ -35,16 +35,16 @@ interface StoreProviderProps {
   children: React.ReactNode;
   themeConfig: ThemeConfig;
   navigationConfig: NavigationConfig;
-  views: View[];
-  initialView?: View | null;
+  views: ResolvedView[];
+  initialView?: ResolvedView | null;
   isAuthorMode: boolean;
 }
 
 interface StoreInitProps {
   themeConfig: ThemeConfig;
   navigationConfig: NavigationConfig;
-  views: View[];
-  initialView?: View | null;
+  views: ResolvedView[];
+  initialView?: ResolvedView | null;
   isAuthorMode: boolean;
 }
 
@@ -77,6 +77,15 @@ function createInitializedStore({
   store.dispatch(initializeNavigation(navigationConfig));
   store.dispatch(setAllViews(views));
   store.dispatch(initializeAuthorMode(isAuthorMode));
+
+  // Log navigation initialization
+  console.log('%c[StoreProvider] Initializing navigation from server:', 'color: #10b981; font-weight: bold');
+  console.log('  siteName:', navigationConfig.siteName);
+  console.log('  Header items:', navigationConfig.header.length);
+  navigationConfig.header.forEach((item, idx) => {
+    console.log(`    [${idx}] id=${item.id}, label="${item.label}", linkType=${item.linkType}, viewId=${item.viewId}, url=${item.url}`);
+  });
+  console.log('  Footer items:', navigationConfig.footer.length);
 
   if (initialView) {
     store.dispatch(setCurrentView(initialView));

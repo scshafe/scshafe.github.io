@@ -1,0 +1,16 @@
+{
+  "comp_id": 1137277298,
+  "type": "ViewContainer",
+  "reference_count": 1,
+  "created_at": "2026-01-29T09:43:10.440418",
+  "updated_at": "2026-01-29T09:43:24.143015",
+  "config": {
+    "path": "/page-1",
+    "name": "Page 1",
+    "title": "Page 1",
+    "browser_title": "Page 1",
+    "description": "",
+    "tag_ids": [],
+    "child_node_id": 3304757236
+  }
+}

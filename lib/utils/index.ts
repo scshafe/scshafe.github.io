@@ -1,6 +1,5 @@
 export {
   fuzzyMatch,
   getTagSuggestions,
-  getTagCounts,
-  getAllUniqueTags,
+  fuzzyContains,
 } from './fuzzyMatch';

@@ -17,8 +17,8 @@ A static blog built with Next.js and a configurable Views system. Features an au
 │                                   │ reads/writes                 │
 │                                   ▼                              │
 │                            ┌──────────────┐                     │
-│                            │  data.json   │                     │
 │                            │ settings.json│                     │
+│                            │ views/*.json │                     │
 │                            └──────────────┘                     │
 │                                                                  │
 │   metadata.json is NOT used during development                   │
@@ -81,7 +81,7 @@ Navigate to [http://localhost:3000/settings](http://localhost:3000/settings) to 
 
 ### Starting Fresh
 
-Reset data to seed state and start authoring:
+Reset data and start authoring:
 
 ```bash
 npm run data:reset
@@ -94,33 +94,36 @@ npm run author
 .
 ├── app/                    # Next.js App Router pages
 │   ├── [[...viewPath]]/    # Dynamic catch-all for views
-│   ├── components/         # React components
-│   │   ├── views/          # View system components
-│   │   ├── layout/         # Header, Footer
-│   │   ├── posts/          # Blog post components
-│   │   └── settings/       # Settings UI components
 │   ├── posts/[slug]/       # Blog post pages
-│   ├── category/[category]/# Category filter pages
+│   ├── tag/[tag]/          # Tag filter pages
 │   └── settings/           # Author mode settings
+├── components/             # React components
+│   ├── views/              # View system components
+│   ├── ui/                 # Shared UI (Header, Footer, ThemeProvider)
+│   ├── posts/              # Blog post components
+│   ├── settings/           # Settings UI components
+│   └── author/             # Author mode components
 ├── backend/                # Python Flask server
 │   ├── server.py           # Main API server
 │   ├── database.py         # JSON database module
 │   ├── export_metadata.py  # Exports JSON to metadata.json
-│   └── reset_and_seed.py   # Reset data to seed state
+│   └── reset_and_seed.py   # Reset data to default state
 ├── content/                # Content storage
-│   ├── data.json           # JSON database (source of truth)
-│   ├── seed_data.json      # Template for resetting data
 │   ├── settings.json       # Theme and navigation settings
-│   ├── reseed_settings.json# Template for resetting settings
 │   ├── metadata.json       # Generated at build time only
+│   ├── views/              # View JSON files
+│   ├── experiences/        # Experience markdown files
 │   └── posts/              # Markdown post files
 ├── example_data/           # Example data files for reference
 ├── lib/                    # Shared utilities
 │   ├── content/            # Content loading functions
-│   └── store/              # Redux store and slices
+│   ├── store/              # Redux store and slices
+│   └── utils/              # Utility functions
+├── scripts/                # Build scripts
 ├── public/                 # Static assets
 │   ├── images/             # Image files
 │   └── pdfs/               # PDF files
+├── site.config.ts          # Site configuration
 └── out/                    # Static build output
 ```
 
@@ -128,8 +131,8 @@ npm run author
 
 ### Source of Truth
 
-- **JSON database** (`content/data.json`) is the source of truth for views, components, posts
 - **Settings JSON** (`content/settings.json`) stores theme and navigation
+- **View JSON files** (`content/views/*.json`) store view configurations
 - **Markdown files** (`content/posts/*.md`) store post content
 - **metadata.json** is ONLY generated at build time, never read/written during development
 
@@ -144,7 +147,7 @@ npm run author
 1. `npm run build` triggers prebuild script
 2. Prebuild exports JSON → `metadata.json`
 3. Next.js generates static HTML from `metadata.json`
-4. Output goes to `/out` directory
+4. Output goes to configured output directory
 
 ## npm Scripts
 
@@ -155,11 +158,11 @@ npm run author
 | `npm run author:server` | Start Flask server only |
 | `npm run build` | Build static site (exports metadata first) |
 | `npm run preview` | Preview built site locally |
-| `npm run export:metadata` | Export data.json to metadata.json |
-| `npm run data:reset` | Reset data.json and settings.json to seed state |
-| `npm run data:reset-data` | Reset only data.json |
-| `npm run data:reset-settings` | Reset only settings.json |
-| `npm run data:reset-interactive` | Interactive reset with step-by-step options |
+| `npm run export:metadata` | Export JSON to metadata.json |
+| `npm run data:reset` | Reset data to default state |
+| `npm run data:reset-data` | Reset only view data |
+| `npm run data:reset-settings` | Reset only settings |
+| `npm run data:reset-interactive` | Interactive reset with options |
 | `npm run lint` | Run ESLint |
 
 ## Building for Production
@@ -175,8 +178,8 @@ npm run preview
 The build process:
 1. Exports metadata from JSON files
 2. Generates RSS feed
-3. Builds static HTML to `/out`
-4. Copies `index.html` to root for GitHub Pages
+3. Builds static HTML to output directory
+4. Copies public directory to output
 
 ## Deployment
 
@@ -184,29 +187,10 @@ The build process:
 
 The site is configured for static export. After building:
 
-1. The `/out` directory contains the full static site
-2. `index.html` in root redirects to the built site
+1. The output directory contains the full static site
+2. All static assets are self-contained
 
 Deploy by pushing to GitHub and enabling Pages on the repository.
-
-### Served Files Structure
-
-For any static hosting, serve:
-
-```
-/
-├── index.html              # Root redirect/entry
-└── out/                    # All static assets
-    ├── index.html
-    ├── posts/
-    ├── category/
-    ├── settings/
-    ├── feed.xml
-    ├── _next/              # Next.js assets
-    └── images/             # Static images
-```
-
-Or serve the contents of `/out` directly as the root.
 
 ## Views System
 
@@ -222,10 +206,12 @@ The site uses a configurable "Views" system instead of hardcoded pages:
 All views and components implement the **Node** interface for tree-based organization:
 
 ```typescript
+type NodeId = number;  // Random integer < 2^32
+
 interface Node {
-  id: string;           // Unique identifier
-  parentId: string | null;  // Parent node ID
-  previousId: string | null; // Previous sibling for ordering
+  id: NodeId;              // Unique identifier
+  parentId: NodeId | null; // Parent node ID
+  previousId: NodeId | null; // Previous sibling for ordering
 }
 ```
 
@@ -259,29 +245,25 @@ The List component is a polymorphic container that can hold different item types
 - `listType: "View"` - Contains View link items
 - `listType: "Tag"` - Contains Tag items
 
-## Data Structure (data.json)
-
-| Section | Purpose |
-|---------|---------|
-| `views` | Page configurations keyed by ID |
-| `components` | Components keyed by ID |
-| `relationships` | Parent-child links for nesting |
-| `posts` | Blog post metadata keyed by ID |
-| `content` | Markdown content keyed by owner ID |
-| `settings` | Key-value settings |
-
 ## Reserved Paths
 
 These paths are reserved and cannot be used for views:
 - `/settings` - Settings page
 - `/posts/[slug]` - Individual blog posts
-- `/category/[category]` - Category filter pages
+- `/tag/[tag]` - Tag filter pages
 - `/feed.xml` - RSS feed
+
+## State Management
+
+Frontend uses Redux Toolkit with these slices:
+- **authorSlice**: Author mode toggle, editing state
+- **viewSlice**: Current view, components, CRUD operations
+- **themeSlice**: Active theme, color scheme preference
+- **navigationSlice**: Site name, header/footer nav items
 
 ## Development Notes
 
 - The Flask server is only needed for editing content
 - Static builds work without Python installed
 - All content changes persist to JSON immediately
-- Redux Toolkit manages frontend state
 - Components support inline editing in author mode

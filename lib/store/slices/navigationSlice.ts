@@ -63,6 +63,14 @@ const navigationSlice = createSlice({
   reducers: {
     // Initialize navigation from server config
     initializeNavigation: (state, action: PayloadAction<NavigationConfig>) => {
+      console.log('[navigationSlice] initializeNavigation:', {
+        siteName: action.payload.siteName,
+        headerCount: action.payload.header.length,
+        footerCount: action.payload.footer.length,
+      });
+      action.payload.header.forEach((item, idx) => {
+        console.log(`  header[${idx}] id=${item.id}, label='${item.label}', linkType=${item.linkType}, viewId=${item.viewId}, url=${item.url}`);
+      });
       state.siteName = action.payload.siteName;
       state.header = action.payload.header;
       state.footer = action.payload.footer;

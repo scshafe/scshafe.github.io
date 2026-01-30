@@ -1,6 +1,6 @@
 # Project Overview
 
-A Next.js static blog with a configurable Views system. Features **Author Mode** for local content editing via Flask/JSON and **Publish Mode** for generating static HTML for deployment.
+A Next.js static site with a configurable Views system. Features **Author Mode** for local content editing via Flask/JSON and **Publish Mode** for generating static HTML for deployment.
 
 ## Architecture
 
@@ -17,8 +17,12 @@ A Next.js static blog with a configurable Views system. Features **Author Mode**
 │                                   │ reads/writes                 │
 │                                   ▼                              │
 │                            ┌──────────────┐                     │
-│                            │  data.json   │                     │
-│                            │ settings.json│                     │
+│                            │ content/     │                     │
+│                            │ ├─ views/    │                     │
+│                            │ ├─ nodes/    │                     │
+│                            │ ├─ refs/     │                     │
+│                            │ ├─ comps/    │                     │
+│                            │ └─ settings/ │                     │
 │                            └──────────────┘                     │
 │                                                                  │
 │   metadata.json is NOT used during development                   │
@@ -40,55 +44,163 @@ A Next.js static blog with a configurable Views system. Features **Author Mode**
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+## Entity Architecture
+
+The system uses a three-layer entity architecture for content management:
+
+```
+Node → ref_id → Reference → comp_id → Component
+```
+
+**Views are now ViewContainer components** - a View is represented as a Node pointing to a Reference pointing to a ViewContainer component.
+
+### Entity Relationships
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        ENTITY RELATIONSHIPS                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   NODE (tree structure position)                                 │
+│   ├─ node_id [PK]                                               │
+│   ├─ ref_id ─────────────────────────────┐                      │
+│   ├─ parent_node_id (null for root)      │                      │
+│   ├─ previous_node_id (sibling chain)    │                      │
+│   └─ next_node_id (sibling chain)        │                      │
+│                                          │                      │
+│   REFERENCE (indirection layer)          │                      │
+│   ├─ ref_id [PK] ◄───────────────────────┘                      │
+│   ├─ node_id (back-reference)                                   │
+│   ├─ comp_id ────────────────────────────┐                      │
+│   └─ overrides (location-specific config)│                      │
+│                                          │                      │
+│   COMPONENT (content/config)             │                      │
+│   ├─ comp_id [PK] ◄──────────────────────┘                      │
+│   ├─ type (discriminator)                                       │
+│   ├─ config (type-specific data)                                │
+│   └─ reference_count (for deletion safety)                      │
+│                                                                  │
+│   CONTAINER extends COMPONENT                                    │
+│   └─ child_node_id (first child in linked-list)                 │
+│                                                                  │
+│   TAG (categorization)                                           │
+│   ├─ tag_id [PK]                                                │
+│   └─ label                                                       │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Resolution Flow
+
+When displaying a view, the system "resolves" entities:
+
+1. Load root node by `node_id`
+2. Load reference via `ref_id`
+3. Load component (ViewContainer) via `comp_id`
+4. For container components, get `child_node_id` and walk the linked-list via `next_node_id`
+5. Merge component `config` with reference `overrides`
+6. Recursively resolve children
+
+See `docs/ENTITY_UML_SCHEMA.md` for the complete UML diagram and `docs/ID_NAMING_CONVENTIONS.md` for ID field naming rules.
+
 ## Directory Structure
 
 ```
 ├── app/                      # Next.js App Router pages
 │   ├── [[...viewPath]]/      # Dynamic catch-all route for views
-│   ├── components/           # React components
-│   │   ├── views/            # View system components
-│   │   │   ├── ViewRenderer.tsx
-│   │   │   ├── ViewComponentRenderer.tsx
-│   │   │   ├── AddComponentButton.tsx
-│   │   │   └── [Component]ViewComponent.tsx
-│   │   ├── posts/            # Blog post components
-│   │   ├── settings/         # Settings page UI components
-│   │   └── layout/           # Header, Footer
-│   ├── posts/[slug]/         # Individual blog post pages
-│   ├── category/[category]/  # Category listing pages
 │   └── settings/             # Author-only settings page
+├── components/               # React components
+│   ├── views/                # View system components
+│   │   ├── ViewRenderer.tsx
+│   │   ├── ViewComponentRenderer.tsx
+│   │   ├── ViewPageClient.tsx
+│   │   └── [Type]Component.tsx
+│   ├── settings/             # Settings page UI components
+│   ├── ui/                   # Shared UI (Header, Footer, ThemeProvider)
+│   └── author/               # Author mode components
 ├── backend/                  # Python Flask server
-│   ├── server.py             # Main API server
-│   ├── database.py           # JSON database module
-│   ├── export_metadata.py    # Exports JSON to metadata.json for builds
+│   ├── server.py             # Main API server with logging middleware
+│   ├── database.py           # JSON file-based database module
+│   ├── entities/             # Python entity classes
+│   │   ├── __init__.py       # Export all entities
+│   │   ├── base.py           # Entity base class, generate_id()
+│   │   ├── node.py           # Node class
+│   │   ├── reference.py      # Reference class
+│   │   ├── component.py      # Component base classes
+│   │   ├── containers.py     # ViewContainer, ListContainer, etc.
+│   │   ├── units.py          # SectionUnit, MarkdownUnit, etc.
+│   │   ├── media.py          # ImageMedia, VideoMedia, PDFMedia
+│   │   ├── settings.py       # Settings entities
+│   │   └── links.py          # BasicLink, InternalLink, ExternalLink
+│   ├── routes/               # Blueprint route handlers
+│   │   ├── nodes.py          # Node CRUD + tree operations
+│   │   ├── references.py     # Reference CRUD
+│   │   ├── components.py     # Component CRUD
+│   │   ├── tags.py           # Tag CRUD
+│   │   ├── site.py           # Site configuration
+│   │   ├── navigation.py     # Header/footer navigation
+│   │   ├── themes.py         # Theme management
+│   │   ├── media.py          # Image/PDF handling
+│   │   ├── metadata.py       # Full metadata operations
+│   │   └── debug.py          # Debug endpoints
+│   ├── export_metadata.py    # Exports JSON to metadata.json
 │   └── reset_and_seed.py     # Reset data to seed state
-├── content/
-│   ├── data.json             # JSON database (source of truth)
-│   ├── seed_data.json        # Template for resetting data
-│   ├── settings.json         # Theme and navigation settings
-│   ├── reseed_settings.json  # Template for resetting settings
-│   ├── metadata.json         # Generated at build time only
-│   └── posts/                # Markdown blog post files
-├── example_data/             # Example data files for reference
-│   ├── settings.json
-│   ├── experiences.json
-│   └── views/                # Example view configurations
+├── content/                  # Source of truth during development
+│   ├── nodes/{node_id}.json  # Tree structure nodes
+│   ├── references/{ref_id}.json  # References with overrides
+│   ├── components/           # Component content/config
+│   │   ├── ViewContainer/{comp_id}.json
+│   │   ├── ListContainer/{comp_id}.json
+│   │   ├── SectionUnit/{comp_id}.json
+│   │   ├── MarkdownUnit/{comp_id}.json
+│   │   ├── AlertUnit/{comp_id}.json
+│   │   ├── PlainTextUnit/{comp_id}.json
+│   │   ├── LinkUnit/{comp_id}.json
+│   │   ├── ImageMedia/{comp_id}.json
+│   │   ├── VideoMedia/{comp_id}.json
+│   │   ├── PDFMedia/{comp_id}.json
+│   │   ├── ExperienceComponent/{comp_id}.json
+│   │   └── TagListComponent/{comp_id}.json
+│   ├── tags/{tag_id}.json    # Tag entities
+│   ├── settings/             # Split settings structure
+│   │   ├── site.json         # Site name, default home view
+│   │   ├── navbar/{nav_bar_id}.json  # Header navigation items
+│   │   ├── footer/{footer_id}.json   # Footer navigation items
+│   │   └── themes/
+│   │       ├── config.json   # Active theme, color scheme
+│   │       └── custom/{theme_id}.json # Custom theme definitions
+│   └── metadata.json         # Generated at build time only
 ├── lib/
+│   ├── api/
+│   │   └── client.ts         # Centralized API client with logging
 │   ├── content/
-│   │   ├── views.ts          # View system type definitions & Node interface
+│   │   ├── components.ts     # Component type definitions (renamed from views.ts)
+│   │   ├── types.ts          # Shared TypeScript types with branded IDs
 │   │   ├── views.server.ts   # Server-side view loading
-│   │   ├── posts.ts          # Post loading utilities
-│   │   └── types.ts          # Shared TypeScript types
-│   └── store/                # Redux Toolkit store
-│       ├── index.ts          # Store configuration
-│       ├── hooks.ts          # Typed hooks
-│       └── slices/           # Redux slices
-│           ├── authorSlice.ts
-│           ├── viewSlice.ts
-│           └── settingsSlice.ts
+│   │   ├── navigation.ts     # Navigation config loading
+│   │   ├── themes.ts         # Theme definitions
+│   │   └── themes.server.ts  # Server-side theme loading
+│   ├── store/                # Redux Toolkit store
+│   │   ├── index.ts          # Store configuration
+│   │   ├── hooks.ts          # Typed hooks
+│   │   ├── StoreProvider.tsx # Redux provider wrapper
+│   │   └── slices/
+│   │       ├── authorSlice.ts
+│   │       ├── viewSlice.ts
+│   │       ├── themeSlice.ts
+│   │       └── navigationSlice.ts
+│   └── utils/
+│       ├── index.ts          # Utility exports
+│       ├── logging.ts        # Verbose logging utilities
+│       └── fuzzyMatch.ts     # Fuzzy matching for search
+├── scripts/
+│   └── postbuild.mjs         # Post-build processing
+├── docs/                     # Documentation
+│   ├── ENTITY_UML_SCHEMA.md  # UML class diagram
+│   ├── ID_NAMING_CONVENTIONS.md  # ID field naming rules
+│   └── DATA_PERSISTENCE.md   # Data flow documentation
 ├── public/                   # Static assets
-│   ├── images/               # Image files
-│   └── pdfs/                 # PDF files
+├── site.config.ts            # Site configuration (output directory)
 └── out/                      # Static build output
 ```
 
@@ -96,259 +208,214 @@ A Next.js static blog with a configurable Views system. Features **Author Mode**
 
 ### Source of Truth
 
-- **JSON database** (`content/data.json`) is the single source of truth for views, components, posts
-- **Settings JSON** (`content/settings.json`) stores theme and navigation
-- **Markdown files** (`content/posts/*.md`) store post content
-- **metadata.json** is ONLY generated at build time, never read/written during development
+During development, data is stored in individual JSON files:
 
-### During Development (Author Mode)
+| Entity | Location | Primary Key | Purpose |
+|--------|----------|-------------|---------|
+| Nodes | `content/nodes/{node_id}.json` | `node_id` | Tree structure and sibling ordering |
+| References | `content/references/{ref_id}.json` | `ref_id` | Component references with overrides |
+| Components | `content/components/{Type}/{comp_id}.json` | `comp_id` | Component content and config |
+| Tags | `content/tags/{tag_id}.json` | `tag_id` | Content categorization |
+| Site Config | `content/settings/site.json` | (singleton) | Site name, default home view |
+| NavBar | `content/settings/navbar/{nav_bar_id}.json` | `nav_bar_id` | Header navigation items |
+| Footer | `content/settings/footer/{footer_id}.json` | `footer_id` | Footer navigation items |
+| Themes | `content/settings/themes/custom/{theme_id}.json` | `theme_id` | Custom theme definitions |
 
-1. Next.js fetches data from Flask API (`http://localhost:3001`)
-2. Flask server reads/writes to JSON files
-3. **metadata.json is completely bypassed**
+**Views are ViewContainer components** - no separate views directory.
 
-### During Build (Publish Mode)
+**metadata.json** is ONLY generated at build time, never read/written during development.
 
-1. `npm run build` triggers prebuild script
-2. Prebuild exports JSON → `metadata.json`
-3. Next.js generates static HTML from `metadata.json`
-4. Output goes to `/out` directory
+### ID Generation
 
-## Node Architecture
+All entity IDs are random 32-bit unsigned integers:
+- `generate_id()` returns `random.randint(0, 0xFFFFFFFF)`
+- IDs are immutable and not user-editable
+- Ensures no conflicts even with concurrent operations
 
-All views and components implement the **Node** interface for tree-based organization:
+See `docs/ID_NAMING_CONVENTIONS.md` for ID field naming rules.
 
-```typescript
-interface Node {
-  id: string;              // Unique identifier
-  parentId: string | null; // Parent node ID (null for root nodes)
-  previousId: string | null; // Previous sibling for ordering (null if first)
-}
+## API Endpoints
+
+All endpoints use prefixed ID field names (`node_id`, `ref_id`, `comp_id`, etc.). See `docs/ID_NAMING_CONVENTIONS.md`.
+
+### Core Entity APIs
+
+| Endpoint | Methods | Description |
+|----------|---------|-------------|
+| `/nodes` | GET, POST | Nodes CRUD |
+| `/nodes/<node_id>` | GET, PUT, DELETE | Individual node |
+| `/nodes/<node_id>/move` | PUT | Reposition node in tree |
+| `/nodes/<node_id>/children` | POST | Add child to node |
+| `/nodes/<node_id>/resolved` | GET | Node with resolved component tree |
+| `/references` | GET, POST | References CRUD |
+| `/references/<ref_id>` | GET, PUT, DELETE | Individual reference |
+| `/components` | GET | List all components |
+| `/components/<type>` | GET, POST | Components by type |
+| `/components/<type>/<comp_id>` | GET, PUT, DELETE | Individual component |
+| `/components/<type>/<comp_id>/usages` | GET | Find all usages of component |
+| `/tags` | GET, POST | Tags CRUD |
+| `/tags/<tag_id>` | GET, PUT, DELETE | Individual tag |
+
+### Settings APIs
+
+| Endpoint | Methods | Description |
+|----------|---------|-------------|
+| `/site` | GET, PUT | Site configuration |
+| `/site/home-view` | GET, PUT | Default home view (returns `node_id`) |
+| `/navigation` | GET, PUT | Navigation (aggregated) |
+| `/navbar` | GET, POST | Navbar items |
+| `/navbar/<nav_bar_id>` | PUT, DELETE | Individual navbar item |
+| `/footer` | GET, POST | Footer items |
+| `/footer/<footer_id>` | PUT, DELETE | Individual footer item |
+| `/themes` | GET, PUT | Theme configuration |
+| `/themes/<theme_id>` | GET, PUT, DELETE | Individual theme |
+
+### Utility APIs
+
+| Endpoint | Methods | Description |
+|----------|---------|-------------|
+| `/metadata` | GET, PUT | Full metadata |
+| `/fetch-image` | POST | Fetch image from URL |
+| `/save-image` | POST | Save image to public |
+| `/upload-pdf` | POST | Upload PDF file |
+| `/health` | GET | Health check |
+| `/raw/<entity_type>` | GET | Debug: raw entity data |
+
+## Logging
+
+### Backend (Flask)
+
+The server uses a custom VERBOSE logging level (15, between DEBUG and INFO):
+
+```python
+# Color-coded request/response logging
+→ GET /views                           # Cyan
+→ POST /views/123/components           # Green
+→ PUT /references/456                  # Yellow
+→ DELETE /nodes/789                    # Red
+← 200 GET /views (views=3)             # Green status
+← 404 DELETE /views/123 error="..."    # Red status
+
+# Verbose mode shows full JSON payloads
+──────────────────────────────────────
+URL Params:
+{"path_params": {"id": 123}}
+JSON Data:
+{"component_type": "Title", "config": {...}}
+──────────────────────────────────────
 ```
 
-### Key Concepts
+### Frontend (React)
 
-- **Tree Structure**: Views contain components, List components contain child items
-- **Linked-List Ordering**: `previousId` chains define sibling order
-- **Polymorphism**: All entity types extend Node for consistent operations
+The API client (`lib/api/client.ts`) logs all requests:
 
-### Node Operations (lib/content/views.ts)
-
-```typescript
-// Selectors
-selectChildren(store, parentId)      // Get all children of a node
-selectNextSibling(store, nodeId)     // Get next sibling
-selectPreviousSibling(store, nodeId) // Get previous sibling
-selectAncestors(store, nodeId)       // Get all ancestors
-selectDescendants(store, nodeId)     // Get all descendants
-selectFirstChild(store, parentId)    // Get first child (previousId === null)
-selectLastChild(store, parentId)     // Get last child (no next sibling)
-
-// Mutations
-insertNodeAfter(store, newNode, afterNodeId, parentId)
-removeNode(store, nodeId)
-moveNode(store, nodeId, newParentId, afterNodeId)
+```javascript
+→ GET /views/123/resolved              // Cyan
+→ POST /nodes/456/children {...}       // Green (truncated body)
+← 200 GET /views/123/resolved (1.2ms) (components=5)
+← 404 DELETE /nodes/789 (error="Node not found")
 ```
 
-### Redux Selectors (lib/store/slices/viewSlice.ts)
+## Component Types
 
-```typescript
-selectComponentById(state, componentId)
-selectComponentChildren(state, componentId)
-selectComponentParent(state, componentId)
-selectComponentsMap(state)
-selectNextComponent(state, componentId)
-selectPreviousComponent(state, componentId)
-selectComponentsByType(state, type)
+Components are organized into a hierarchy based on the UML schema in `docs/ENTITY_UML_SCHEMA.md`.
+
+### Component Hierarchy
+
+```
+Component (abstract)
+├── Container (abstract) - has child_node_id
+│   ├── ViewContainer - represents a page/view
+│   ├── ListContainer - container for list items
+│   ├── InlineContainer - inline content wrapper
+│   └── StyleContainer - styling wrapper
+├── UnitComponent (abstract) - leaf content
+│   ├── SectionUnit - heading/title (formerly Title)
+│   ├── PlainTextUnit - plain text (formerly Information)
+│   ├── AlertUnit - alert boxes (formerly Alert)
+│   ├── MarkdownUnit - markdown content (formerly MarkdownEditor)
+│   ├── LinkUnit - link display
+│   └── MediaUnit (abstract)
+│       ├── ImageMedia - images (formerly MultiMedia)
+│       ├── VideoMedia - videos
+│       └── PDFMedia - PDFs (formerly PDFViewer)
+├── ExperienceComponent - work experience
+└── TagListComponent - tag listing
 ```
 
-## Views System
+### Component Type Reference
 
-The site uses a configurable **Views** system where each page is a "view" containing ordered components:
+| Type | Description | Container | Old Name |
+|------|-------------|-----------|----------|
+| ViewContainer | Page/view with path and metadata | Yes | (View entity) |
+| ListContainer | Container for child items | Yes | List |
+| InlineContainer | Inline content wrapper | Yes | (new) |
+| StyleContainer | Styling wrapper | Yes | (new) |
+| SectionUnit | Section heading | No | Title |
+| PlainTextUnit | Plain text content | No | Information |
+| AlertUnit | Warning/info alert boxes | No | Alert |
+| MarkdownUnit | Editable markdown content | No | MarkdownEditor |
+| LinkUnit | Link display | No | ViewLink |
+| ImageMedia | Image display | No | MultiMedia |
+| VideoMedia | Video display | No | (new) |
+| PDFMedia | Embedded PDF display | No | PDFViewer |
+| ExperienceComponent | Work experience card | No | Experience |
+| TagListComponent | Tag/category listing | No | TagList |
 
-- **View**: A page with path, title, browser title, and list of components
-- **Components**: Building blocks that render content
+## State Management
 
-### Component Types
+Frontend uses Redux Toolkit:
 
-| Type | Description | Container |
-|------|-------------|-----------|
-| Title | Page title display | No |
-| MarkdownEditor | Editable markdown content | No |
-| Information | Info box with icon | No |
-| Alert | Warning/info alert boxes | No |
-| List | Container for child items | Yes |
-| BlogPost | Single blog post card | No (List child) |
-| Experience | Work experience card | No (List child) |
-| View | Link to another view | No (List child) |
-| Tag | Category/tag link | No (List child) |
-| PDFViewer | Embedded PDF display | No |
-| MultiMedia | Image/media display | No |
+- **authorSlice**: Author mode toggle, editing state
+- **viewSlice**: Current view, components, CRUD operations via async thunks
+- **themeSlice**: Active theme, color scheme preference
+- **navigationSlice**: Site name, header/footer nav items
 
-### List Component
-
-The List component is a polymorphic container:
-
-```typescript
-interface ListComponent extends ViewComponentBase {
-  type: 'List';
-  config: {
-    listType: 'BlogPost' | 'Experience' | 'View' | 'Tag';
-    displayMode: 'list' | 'grid' | 'compact';
-    name: string;
-    showName: boolean;
-    collapsible: boolean;
-    defaultExpanded: boolean;
-    showAddButton: boolean;
-    maxItems?: number;
-  };
-  children: ViewComponent[]; // Child items of matching listType
-}
-```
-
-Views are configured via Settings → Views tab. One view marked as `isHome: true` serves as the root `/` page.
+Key viewSlice async thunks:
+- `fetchCurrentView(viewId)` - Load resolved view
+- `addComponentToCurrentView({viewId, component_type, config})` - Add component
+- `addChildToListComponent({viewId, parent_node_id, component_type, config})` - Add list child
+- `updateComponentConfig({viewId, component_id, ref_id, config, useOverrides})` - Update component
+- `deleteComponentFromView({viewId, node_id})` - Delete component
+- `moveComponentInView({viewId, node_id, direction})` - Reorder component
 
 ## npm Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start Next.js dev server only (read-only, no editing) |
-| `npm run author` | Start both Next.js and Flask servers (full editing) |
+| `npm run dev` | Start Next.js dev server only (read-only) |
+| `npm run author` | Start both Next.js and Flask servers |
 | `npm run author:server` | Start Flask server only |
 | `npm run build` | Build static site (exports metadata first) |
-| `npm run preview` | Preview built static site locally |
-| `npm run export:metadata` | Export data.json to metadata.json |
-| `npm run data:reset` | Reset data.json and settings.json to seed state |
-| `npm run data:reset-data` | Reset only data.json |
-| `npm run data:reset-settings` | Reset only settings.json |
-| `npm run data:reset-interactive` | Interactive reset with step-by-step options |
+| `npm run preview` | Preview built static site |
+| `npm run export:metadata` | Export JSON to metadata.json |
+| `npm run data:reset` | Reset all data to default |
+| `npm run data:reset-data` | Reset only view data |
+| `npm run data:reset-settings` | Reset only settings |
+| `npm run data:reset-interactive` | Interactive reset |
 | `npm run lint` | Run ESLint |
-| `npm run start` | Start Next.js production server |
 
-## Workflows
+## Reserved Paths
 
-### Starting Fresh
-
-```bash
-npm run data:reset
-npm run author
-```
-
-This resets data from seed files:
-- Views: Home, About, Blog, Resume
-- Sample components and content
-- Default navigation and theme
-
-### Author Mode (Development)
-
-```bash
-npm run author
-```
-
-Starts both servers:
-- Next.js dev server on http://localhost:3000
-- Flask author server on http://localhost:3001
-
-Edit content at:
-- **Settings Page** (`/settings`): Configure views, navigation, themes
-- **Views Tab**: Create/edit/delete views, add components, reorder
-- **Navigation Tab**: Edit site name, header and footer links
-- **Theme Tab**: Switch themes and color schemes
-
-All changes persist immediately to JSON files.
-
-### Publish Mode (Building for Production)
-
-```bash
-npm run build
-npm run preview  # Optional: preview locally
-```
-
-Build process:
-1. Exports JSON → `metadata.json`
-2. Generates RSS feed (`public/feed.xml`)
-3. Builds static HTML to `/out`
-4. Copies `out/index.html` to root for GitHub Pages
-
-### Deployment
-
-Push to GitHub with Pages enabled. Serve:
-
-```
-/
-├── index.html              # Root entry
-└── out/                    # All static assets
-    ├── index.html
-    ├── posts/
-    ├── category/
-    ├── settings/
-    ├── feed.xml
-    ├── _next/
-    └── images/
-```
-
-Or serve `/out` contents directly as root.
-
-## API Endpoints (Flask Backend)
-
-| Endpoint | Methods | Description |
-|----------|---------|-------------|
-| `/metadata` | GET, PUT | Full metadata |
-| `/views` | GET, PUT | Views configuration |
-| `/views/<id>` | PUT, DELETE | Individual view CRUD |
-| `/views/<id>/content` | PUT | View content updates |
-| `/posts` | GET | Posts listing |
-| `/tags` | GET | All unique tags |
-| `/experiences` | GET | Experiences listing |
-| `/experiences/order` | PUT | Reorder experiences |
-| `/navigation` | GET, PUT | Navigation config |
-| `/themes` | GET, PUT | Themes config |
-| `/content` | GET, PUT | Content by type/slug |
-| `/fetch-image` | POST | Fetch image from URL |
-| `/save-image` | POST | Save image to public |
-| `/upload-pdf` | POST | Upload PDF file |
-| `/health` | GET | Health check |
-
-## Data Structure (data.json)
-
-| Section | Purpose |
-|---------|---------|
-| `views` | Page configurations keyed by ID |
-| `components` | Components keyed by ID |
-| `relationships` | Parent-child links for nesting |
-| `posts` | Blog post metadata keyed by ID |
-| `content` | Markdown content keyed by owner ID |
-| `settings` | Key-value settings |
-
-## State Management
-
-Frontend uses Redux Toolkit with these slices:
-
-- **authorSlice**: Author mode toggle, editing state
-- **viewSlice**: Current view, components, CRUD operations
-- **settingsSlice**: Theme, navigation configuration
+These paths cannot be used for views:
+- `/` - Alias for default home view
+- `/settings` - Settings page
+- `/api` - Reserved for future API routes
 
 ## Key Configuration
 
 - `.env.development`: Sets `NEXT_PUBLIC_BUILD_MODE=author`
 - `.env.production`: Sets `NEXT_PUBLIC_BUILD_MODE=publish`
-- `next.config.ts`: Static export configuration with `output: 'export'`
-
-## Reserved Paths
-
-These paths are reserved and cannot be used for views:
-- `/settings` - Settings page
-- `/posts/[slug]` - Individual blog posts
-- `/category/[category]` - Category filter pages
-- `/feed.xml` - RSS feed
+- `next.config.ts`: Static export with `output: 'export'`
+- `site.config.ts`: Output directory configuration
 
 ## Prerequisites
 
 - Node.js 18+
 - Python 3.8+
-- pip packages: `flask`, `flask-cors`, `requests`
+- pip packages: `flask`, `flask-cors`, `requests`, `pyyaml`
 
 ```bash
-pip install flask flask-cors requests
+pip install flask flask-cors requests pyyaml
 npm install
 ```

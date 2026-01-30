@@ -59,41 +59,19 @@ export function getTagSuggestions(
 }
 
 /**
- * Count occurrences of each tag across all posts.
+ * Simple fuzzy match that returns true if all characters of query
+ * appear in target in the same order (not necessarily consecutive).
+ * Used for filtering dropdowns and search results.
  */
-export function getTagCounts(
-  posts: { categories: string[] }[]
-): Map<string, number> {
-  const counts = new Map<string, number>();
+export function fuzzyContains(query: string, target: string): boolean {
+  const lowerText = target.toLowerCase();
+  const lowerQuery = query.toLowerCase();
 
-  posts.forEach((post) => {
-    post.categories.forEach((tag) => {
-      const normalizedTag = tag.toLowerCase();
-      counts.set(normalizedTag, (counts.get(normalizedTag) || 0) + 1);
-    });
-  });
-
-  return counts;
-}
-
-/**
- * Get all unique tags from posts, preserving original casing from first occurrence.
- */
-export function getAllUniqueTags(
-  posts: { categories: string[] }[]
-): string[] {
-  const tagMap = new Map<string, string>(); // lowercase -> original
-
-  posts.forEach((post) => {
-    post.categories.forEach((tag) => {
-      const lower = tag.toLowerCase();
-      if (!tagMap.has(lower)) {
-        tagMap.set(lower, tag);
-      }
-    });
-  });
-
-  return Array.from(tagMap.values()).sort((a, b) =>
-    a.toLowerCase().localeCompare(b.toLowerCase())
-  );
+  let queryIndex = 0;
+  for (let i = 0; i < lowerText.length && queryIndex < lowerQuery.length; i++) {
+    if (lowerText[i] === lowerQuery[queryIndex]) {
+      queryIndex++;
+    }
+  }
+  return queryIndex === lowerQuery.length;
 }

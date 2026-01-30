@@ -1,29 +1,59 @@
 /**
  * View Slice
  *
- * Manages the current view state.
- * Views contain their metadata and a list of their immediate children (components).
- * List components also contain their own children.
+ * Manages the current view state with the new entity architecture.
+ *
+ * Architecture:
+ * - Views are ViewContainer components with comp_id
+ * - Views contain root_node_id pointing to a node tree
+ * - Nodes point to References which point to Components
+ * - Frontend works with "resolved" views (ResolvedView, ResolvedNode)
+ * - Mutations go through entity APIs (components, references, nodes)
+ * - After mutations, re-fetch resolved view to update state
+ *
+ * ID Naming Convention:
+ * - All IDs use prefixed field names: node_id, ref_id, comp_id
+ * - CompId for component identifiers
+ * - RefId for reference identifiers
+ * - NodeId for node identifiers
  */
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '../index';
-import type { View, ViewComponent, NodeId } from '@/lib/content/views';
+import type {
+  NodeId,
+  RefId,
+  CompId,
+  ComponentType,
+  ResolvedNode,
+  ResolvedView,
+} from '@/lib/content/types';
+import {
+  fetchResolvedView,
+  addComponentToView,
+  addChildToNode,
+  updateReference,
+  updateComponent as apiUpdateComponent,
+  deleteNode,
+  moveNode,
+} from '@/lib/api/client';
 
-// API base URL
-const API_BASE_URL = 'http://localhost:3001';
+// API base URL for direct calls not covered by client
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface ViewState {
-  // Current view being displayed
-  currentView: View | null;
+  // Current view being displayed (with resolved components)
+  currentView: ResolvedView | null;
   // All available views (for navigation/linking)
-  allViews: View[];
+  allViews: ResolvedView[];
   // Loading states
   loading: boolean;
   saving: boolean;
   error: string | null;
   // Component being edited
-  editingComponent: ViewComponent | null;
+  editingComponent: ResolvedNode | null;
+  // Track node_id and ref_id for each component (keyed by comp_id)
+  componentNodeMap: Record<CompId, { node_id: NodeId; ref_id: RefId }>;
 }
 
 const initialState: ViewState = {
@@ -33,17 +63,71 @@ const initialState: ViewState = {
   saving: false,
   error: null,
   editingComponent: null,
+  componentNodeMap: {},
 };
 
-// Async thunks for API operations
+/**
+ * Build componentNodeMap from resolved components
+ * Maps comp_id -> { node_id, ref_id } for mutation operations
+ */
+function buildComponentNodeMap(
+  components: ResolvedNode[]
+): Record<CompId, { node_id: NodeId; ref_id: RefId }> {
+  const map: Record<CompId, { node_id: NodeId; ref_id: RefId }> = {};
+
+  function traverse(node: ResolvedNode) {
+    console.log('[buildComponentNodeMap] Mapping component:', {
+      comp_id: node.comp_id,
+      node_id: node.node_id,
+      ref_id: node.ref_id,
+      type: node.type,
+    });
+    map[node.comp_id] = {
+      node_id: node.node_id,
+      ref_id: node.ref_id,
+    };
+    node.children?.forEach(traverse);
+  }
+
+  components.forEach(traverse);
+  console.log('[buildComponentNodeMap] Built map with', Object.keys(map).length, 'entries');
+  return map;
+}
+
+// ============ ASYNC THUNKS ============
+
+/**
+ * Fetch and set the current view (resolved)
+ */
+export const fetchCurrentView = createAsyncThunk(
+  'view/fetchCurrentView',
+  async (viewId: CompId, { rejectWithValue }) => {
+    const result = await fetchResolvedView(viewId as unknown as NodeId);
+    if (result.error) {
+      return rejectWithValue(result.error);
+    }
+    return result.data!;
+  }
+);
+
+/**
+ * Save view metadata (title, description, etc.)
+ */
 export const saveView = createAsyncThunk(
   'view/saveView',
-  async (view: View, { rejectWithValue }) => {
+  async (view: ResolvedView, { rejectWithValue }) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/views/${view.id}`, {
+      const res = await fetch(`${API_BASE_URL}/views/${view.comp_id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(view),
+        body: JSON.stringify({
+          path: view.path,
+          name: view.name,
+          title: view.title,
+          browser_title: view.browser_title,
+          description: view.description,
+          is_home: view.is_home,
+        }),
       });
 
       if (!res.ok) {
@@ -59,236 +143,303 @@ export const saveView = createAsyncThunk(
   }
 );
 
-export const updateViewContent = createAsyncThunk(
-  'view/updateContent',
+/**
+ * Add a component to the current view
+ */
+export const addComponentToCurrentView = createAsyncThunk(
+  'view/addComponent',
   async (
-    { viewId, contentKey, content }: { viewId: NodeId; contentKey: string; content: string },
+    {
+      viewId,
+      component_type,
+      config,
+      after_node_id,
+    }: {
+      viewId: CompId;
+      component_type: ComponentType;
+      config: Record<string, unknown>;
+      after_node_id?: NodeId | null;
+    },
     { rejectWithValue }
   ) => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/views/${viewId}/content`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contentKey, content }),
-      });
+    console.log('[addComponentToCurrentView] Starting, viewId:', viewId, 'type:', component_type);
 
-      if (!res.ok) {
-        throw new Error(`Failed to update content: ${res.status}`);
-      }
-
-      return { contentKey, content };
-    } catch (error) {
-      return rejectWithValue(
-        error instanceof Error ? error.message : 'Failed to update content'
-      );
+    const result = await addComponentToView(
+      viewId as unknown as NodeId,
+      component_type,
+      config,
+      after_node_id
+    );
+    if (result.error) {
+      console.log('[addComponentToCurrentView] addComponentToView failed:', result.error);
+      return rejectWithValue(result.error);
     }
+    console.log('[addComponentToCurrentView] addComponentToView succeeded:', result.data);
+
+    // Re-fetch the resolved view to get updated state
+    console.log('[addComponentToCurrentView] Fetching resolved view...');
+    const viewResult = await fetchResolvedView(viewId as unknown as NodeId);
+    if (viewResult.error) {
+      console.log('[addComponentToCurrentView] fetchResolvedView failed:', viewResult.error);
+      return rejectWithValue(viewResult.error);
+    }
+    console.log('[addComponentToCurrentView] fetchResolvedView succeeded, components:', viewResult.data?.components?.length);
+
+    return viewResult.data!;
   }
 );
+
+/**
+ * Add a child component to a ListContainer or StyleContainer
+ */
+export const addChildToListComponent = createAsyncThunk(
+  'view/addChildComponent',
+  async (
+    {
+      viewId,
+      parent_node_id,
+      component_type,
+      config,
+      after_node_id,
+    }: {
+      viewId: CompId;
+      parent_node_id: NodeId;
+      component_type: ComponentType;
+      config: Record<string, unknown>;
+      after_node_id?: NodeId | null;
+    },
+    { rejectWithValue }
+  ) => {
+    console.log('[addChildToListComponent] Starting, parent_node_id:', parent_node_id, 'type:', component_type);
+    const result = await addChildToNode(parent_node_id, component_type, config, after_node_id);
+    if (result.error) {
+      console.log('[addChildToListComponent] addChildToNode failed:', result.error);
+      return rejectWithValue(result.error);
+    }
+    console.log('[addChildToListComponent] addChildToNode succeeded:', result.data);
+
+    // Re-fetch the resolved view to get updated state
+    console.log('[addChildToListComponent] Fetching resolved view...');
+    const viewResult = await fetchResolvedView(viewId as unknown as NodeId);
+    if (viewResult.error) {
+      console.log('[addChildToListComponent] fetchResolvedView failed:', viewResult.error);
+      return rejectWithValue(viewResult.error);
+    }
+    console.log('[addChildToListComponent] fetchResolvedView succeeded, components:', viewResult.data?.components?.length);
+
+    return viewResult.data!;
+  }
+);
+
+/**
+ * Update a component's config (via reference overrides or component directly)
+ */
+export const updateComponentConfig = createAsyncThunk(
+  'view/updateComponentConfig',
+  async (
+    {
+      viewId,
+      comp_id,
+      component_type,
+      ref_id,
+      config,
+      useOverrides = false,
+    }: {
+      viewId: CompId;
+      comp_id: CompId;
+      component_type: ComponentType;
+      ref_id: RefId;
+      config: Record<string, unknown>;
+      useOverrides?: boolean;
+    },
+    { rejectWithValue }
+  ) => {
+    console.log('[updateComponentConfig] Starting:', {
+      viewId,
+      comp_id,
+      component_type,
+      ref_id,
+      useOverrides,
+      configKeys: Object.keys(config),
+    });
+
+    let result;
+
+    if (useOverrides) {
+      // Update via reference overrides (location-specific)
+      result = await updateReference(ref_id as unknown as NodeId, config);
+    } else {
+      // Update the component directly (affects all usages)
+      result = await apiUpdateComponent(component_type, comp_id as unknown as NodeId, config);
+    }
+
+    if (result.error) {
+      console.log('[updateComponentConfig] Error:', result.error);
+      return rejectWithValue(result.error);
+    }
+
+    // Re-fetch the resolved view to get updated state
+    const viewResult = await fetchResolvedView(viewId as unknown as NodeId);
+    if (viewResult.error) {
+      return rejectWithValue(viewResult.error);
+    }
+
+    console.log('[updateComponentConfig] Success, refetched view');
+    return viewResult.data!;
+  }
+);
+
+/**
+ * Delete a component (deletes the node, which cascades to reference)
+ */
+export const deleteComponentFromView = createAsyncThunk(
+  'view/deleteComponent',
+  async (
+    { viewId, node_id }: { viewId: CompId; node_id: NodeId },
+    { rejectWithValue }
+  ) => {
+    const result = await deleteNode(node_id);
+    if (result.error) {
+      return rejectWithValue(result.error);
+    }
+
+    // Re-fetch the resolved view to get updated state
+    const viewResult = await fetchResolvedView(viewId as unknown as NodeId);
+    if (viewResult.error) {
+      return rejectWithValue(viewResult.error);
+    }
+
+    return viewResult.data!;
+  }
+);
+
+/**
+ * Move a component up or down
+ */
+export const moveComponentInView = createAsyncThunk(
+  'view/moveComponent',
+  async (
+    {
+      viewId,
+      node_id,
+      direction,
+    }: {
+      viewId: CompId;
+      node_id: NodeId;
+      direction: 'up' | 'down';
+    },
+    { rejectWithValue }
+  ) => {
+    // Get current node to find siblings
+    const nodeRes = await fetch(`${API_BASE_URL}/nodes/${node_id}`);
+    if (!nodeRes.ok) {
+      return rejectWithValue('Failed to fetch node');
+    }
+    const node = await nodeRes.json();
+
+    let after_node_id: NodeId | null = null;
+
+    if (direction === 'up') {
+      // Move before previous sibling (after the one before previous)
+      if (node.previous_node_id) {
+        const prevRes = await fetch(`${API_BASE_URL}/nodes/${node.previous_node_id}`);
+        if (prevRes.ok) {
+          const prevNode = await prevRes.json();
+          after_node_id = prevNode.previous_node_id;
+        }
+      }
+    } else {
+      // Move after next sibling
+      after_node_id = node.next_node_id;
+    }
+
+    // If we can't move (already at edge), just return current state
+    if (direction === 'up' && !node.previous_node_id) {
+      const viewResult = await fetchResolvedView(viewId as unknown as NodeId);
+      return viewResult.data!;
+    }
+    if (direction === 'down' && !node.next_node_id) {
+      const viewResult = await fetchResolvedView(viewId as unknown as NodeId);
+      return viewResult.data!;
+    }
+
+    const result = await moveNode(node_id, node.parent_node_id, after_node_id);
+    if (result.error) {
+      return rejectWithValue(result.error);
+    }
+
+    // Re-fetch the resolved view to get updated state
+    const viewResult = await fetchResolvedView(viewId as unknown as NodeId);
+    if (viewResult.error) {
+      return rejectWithValue(viewResult.error);
+    }
+
+    return viewResult.data!;
+  }
+);
+
+// ============ SLICE ============
 
 const viewSlice = createSlice({
   name: 'view',
   initialState,
   reducers: {
     // Set the current view
-    setCurrentView: (state, action: PayloadAction<View>) => {
+    setCurrentView: (state, action: PayloadAction<ResolvedView>) => {
+      console.log('[viewSlice] setCurrentView:', {
+        comp_id: action.payload.comp_id,
+        name: action.payload.name,
+        componentsCount: action.payload.components.length,
+      });
       state.currentView = action.payload;
       state.error = null;
+      state.componentNodeMap = buildComponentNodeMap(action.payload.components);
     },
 
     // Set all available views
-    setAllViews: (state, action: PayloadAction<View[]>) => {
+    setAllViews: (state, action: PayloadAction<ResolvedView[]>) => {
+      console.log('[viewSlice] setAllViews:', action.payload.length, 'views');
+      action.payload.forEach((view, idx) => {
+        console.log(`  [${idx}] comp_id=${view.comp_id}, name='${view.name}', path='${view.path}', root_node_id=${view.root_node_id}`);
+      });
       state.allViews = action.payload;
     },
 
-    // Update content locally (optimistic update)
-    updateContent: (
-      state,
-      action: PayloadAction<{ contentKey: string; content: string }>
-    ) => {
-      if (state.currentView) {
-        state.currentView = {
-          ...state.currentView,
-          content: {
-            ...state.currentView.content,
-            [action.payload.contentKey]: action.payload.content,
-          },
-        };
-      }
-    },
-
-    // Update a component in the current view
-    updateComponent: (state, action: PayloadAction<ViewComponent>) => {
-      if (state.currentView) {
-        state.currentView = {
-          ...state.currentView,
-          components: state.currentView.components.map((c) =>
-            c.id === action.payload.id ? action.payload : c
-          ),
-        };
-      }
-    },
-
-    // Delete a component from the current view
-    deleteComponent: (state, action: PayloadAction<NodeId>) => {
-      if (state.currentView) {
-        state.currentView = {
-          ...state.currentView,
-          components: state.currentView.components.filter(
-            (c) => c.id !== action.payload
-          ),
-        };
-      }
-    },
-
-    // Move a component up or down
-    moveComponent: (
-      state,
-      action: PayloadAction<{ componentId: NodeId; direction: 'up' | 'down' }>
-    ) => {
-      if (!state.currentView) return;
-
-      const { componentId, direction } = action.payload;
-      const components = [...state.currentView.components];
-      const index = components.findIndex((c) => c.id === componentId);
-
-      if (index === -1) return;
-
-      const newIndex = direction === 'up' ? index - 1 : index + 1;
-      if (newIndex < 0 || newIndex >= components.length) return;
-
-      const [moved] = components.splice(index, 1);
-      components.splice(newIndex, 0, moved);
-
-      state.currentView = {
-        ...state.currentView,
-        components,
-      };
-    },
-
-    // Add a component to the current view
-    addComponent: (state, action: PayloadAction<ViewComponent>) => {
-      if (state.currentView) {
-        state.currentView = {
-          ...state.currentView,
-          components: [...state.currentView.components, action.payload],
-        };
-      }
-    },
-
     // Set the component being edited
-    setEditingComponent: (state, action: PayloadAction<ViewComponent | null>) => {
+    setEditingComponent: (state, action: PayloadAction<ResolvedNode | null>) => {
+      console.log('[viewSlice] setEditingComponent:', action.payload?.comp_id ?? null);
       state.editingComponent = action.payload;
-    },
-
-    // Update a child component within a list component
-    updateChildComponent: (
-      state,
-      action: PayloadAction<{ parentId: NodeId; component: ViewComponent }>
-    ) => {
-      if (!state.currentView) return;
-
-      const { parentId, component } = action.payload;
-      state.currentView = {
-        ...state.currentView,
-        components: state.currentView.components.map((c) => {
-          if (c.id === parentId && 'children' in c && c.children) {
-            return {
-              ...c,
-              children: c.children.map((child) =>
-                child.id === component.id ? component : child
-              ),
-            };
-          }
-          return c;
-        }),
-      };
-    },
-
-    // Add a child component to a list
-    addChildComponent: (
-      state,
-      action: PayloadAction<{ parentId: NodeId; component: ViewComponent }>
-    ) => {
-      if (!state.currentView) return;
-
-      const { parentId, component } = action.payload;
-      state.currentView = {
-        ...state.currentView,
-        components: state.currentView.components.map((c) => {
-          if (c.id === parentId && 'children' in c) {
-            return {
-              ...c,
-              children: [...(c.children || []), component],
-            };
-          }
-          return c;
-        }),
-      };
-    },
-
-    // Delete a child component from a list
-    deleteChildComponent: (
-      state,
-      action: PayloadAction<{ parentId: NodeId; componentId: NodeId }>
-    ) => {
-      if (!state.currentView) return;
-
-      const { parentId, componentId } = action.payload;
-      state.currentView = {
-        ...state.currentView,
-        components: state.currentView.components.map((c) => {
-          if (c.id === parentId && 'children' in c && c.children) {
-            return {
-              ...c,
-              children: c.children.filter((child) => child.id !== componentId),
-            };
-          }
-          return c;
-        }),
-      };
-    },
-
-    // Move a child component within a list
-    moveChildComponent: (
-      state,
-      action: PayloadAction<{
-        parentId: NodeId;
-        componentId: NodeId;
-        direction: 'up' | 'down';
-      }>
-    ) => {
-      if (!state.currentView) return;
-
-      const { parentId, componentId, direction } = action.payload;
-      state.currentView = {
-        ...state.currentView,
-        components: state.currentView.components.map((c) => {
-          if (c.id === parentId && 'children' in c && c.children) {
-            const children = [...c.children];
-            const index = children.findIndex((child) => child.id === componentId);
-
-            if (index === -1) return c;
-
-            const newIndex = direction === 'up' ? index - 1 : index + 1;
-            if (newIndex < 0 || newIndex >= children.length) return c;
-
-            const [moved] = children.splice(index, 1);
-            children.splice(newIndex, 0, moved);
-
-            return { ...c, children };
-          }
-          return c;
-        }),
-      };
     },
 
     // Clear error
     clearError: (state) => {
       state.error = null;
     },
+
+    // Set component node map
+    setComponentNodeMap: (
+      state,
+      action: PayloadAction<Record<CompId, { node_id: NodeId; ref_id: RefId }>>
+    ) => {
+      state.componentNodeMap = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
+      // Fetch current view
+      .addCase(fetchCurrentView.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCurrentView.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentView = action.payload;
+        state.componentNodeMap = buildComponentNodeMap(action.payload.components);
+      })
+      .addCase(fetchCurrentView.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
       // Save view
       .addCase(saveView.pending, (state) => {
         state.saving = true;
@@ -302,24 +453,76 @@ const viewSlice = createSlice({
         state.saving = false;
         state.error = action.payload as string;
       })
-      // Update content
-      .addCase(updateViewContent.pending, (state) => {
+      // Add component to view
+      .addCase(addComponentToCurrentView.pending, (state) => {
+        console.log('[viewSlice] addComponentToCurrentView.pending');
         state.saving = true;
         state.error = null;
       })
-      .addCase(updateViewContent.fulfilled, (state, action) => {
+      .addCase(addComponentToCurrentView.fulfilled, (state, action) => {
+        console.log('[viewSlice] addComponentToCurrentView.fulfilled, components:', action.payload.components.length);
         state.saving = false;
-        if (state.currentView) {
-          state.currentView = {
-            ...state.currentView,
-            content: {
-              ...state.currentView.content,
-              [action.payload.contentKey]: action.payload.content,
-            },
-          };
-        }
+        state.currentView = action.payload;
+        state.componentNodeMap = buildComponentNodeMap(action.payload.components);
       })
-      .addCase(updateViewContent.rejected, (state, action) => {
+      .addCase(addComponentToCurrentView.rejected, (state, action) => {
+        console.log('[viewSlice] addComponentToCurrentView.rejected:', action.payload);
+        state.saving = false;
+        state.error = action.payload as string;
+      })
+      // Add child to list
+      .addCase(addChildToListComponent.pending, (state) => {
+        state.saving = true;
+        state.error = null;
+      })
+      .addCase(addChildToListComponent.fulfilled, (state, action) => {
+        state.saving = false;
+        state.currentView = action.payload;
+        state.componentNodeMap = buildComponentNodeMap(action.payload.components);
+      })
+      .addCase(addChildToListComponent.rejected, (state, action) => {
+        state.saving = false;
+        state.error = action.payload as string;
+      })
+      // Update component config
+      .addCase(updateComponentConfig.pending, (state) => {
+        state.saving = true;
+        state.error = null;
+      })
+      .addCase(updateComponentConfig.fulfilled, (state, action) => {
+        state.saving = false;
+        state.currentView = action.payload;
+        state.componentNodeMap = buildComponentNodeMap(action.payload.components);
+      })
+      .addCase(updateComponentConfig.rejected, (state, action) => {
+        state.saving = false;
+        state.error = action.payload as string;
+      })
+      // Delete component
+      .addCase(deleteComponentFromView.pending, (state) => {
+        state.saving = true;
+        state.error = null;
+      })
+      .addCase(deleteComponentFromView.fulfilled, (state, action) => {
+        state.saving = false;
+        state.currentView = action.payload;
+        state.componentNodeMap = buildComponentNodeMap(action.payload.components);
+      })
+      .addCase(deleteComponentFromView.rejected, (state, action) => {
+        state.saving = false;
+        state.error = action.payload as string;
+      })
+      // Move component
+      .addCase(moveComponentInView.pending, (state) => {
+        state.saving = true;
+        state.error = null;
+      })
+      .addCase(moveComponentInView.fulfilled, (state, action) => {
+        state.saving = false;
+        state.currentView = action.payload;
+        state.componentNodeMap = buildComponentNodeMap(action.payload.components);
+      })
+      .addCase(moveComponentInView.rejected, (state, action) => {
         state.saving = false;
         state.error = action.payload as string;
       });
@@ -330,17 +533,9 @@ const viewSlice = createSlice({
 export const {
   setCurrentView,
   setAllViews,
-  updateContent,
-  updateComponent,
-  deleteComponent,
-  moveComponent,
-  addComponent,
   setEditingComponent,
-  updateChildComponent,
-  addChildComponent,
-  deleteChildComponent,
-  moveChildComponent,
   clearError,
+  setComponentNodeMap,
 } = viewSlice.actions;
 
 // Selectors
@@ -350,85 +545,81 @@ export const selectViewLoading = (state: RootState) => state.view.loading;
 export const selectViewSaving = (state: RootState) => state.view.saving;
 export const selectViewError = (state: RootState) => state.view.error;
 export const selectEditingComponent = (state: RootState) => state.view.editingComponent;
+export const selectComponentNodeMap = (state: RootState) => state.view.componentNodeMap;
 
 // Derived selectors
 export const selectViewComponents = (state: RootState) =>
   state.view.currentView?.components ?? [];
 
-export const selectViewContent = (state: RootState) =>
-  state.view.currentView?.content ?? {};
+export const selectViewByCompId = (state: RootState, compId: CompId) =>
+  state.view.allViews.find((v) => v.comp_id === compId);
 
-export const selectViewById = (state: RootState, viewId: NodeId) =>
-  state.view.allViews.find((v) => v.id === viewId);
-
-export const selectViewPathMap = (state: RootState): Map<NodeId, string> => {
-  const map = new Map<NodeId, string>();
+export const selectViewPathMap = (state: RootState): Map<CompId, string> => {
+  const map = new Map<CompId, string>();
   state.view.allViews.forEach((view) => {
-    map.set(view.id, view.path);
+    map.set(view.comp_id, view.path);
   });
   return map;
 };
 
-// ============ NODE-BASED SELECTORS ============
-
 /**
- * Get a component by ID from the current view
+ * Check if a home view is configured
  */
-export const selectComponentById = (state: RootState, componentId: NodeId): ViewComponent | undefined => {
-  const components = state.view.currentView?.components ?? [];
-
-  // Search top-level components
-  for (const component of components) {
-    if (component.id === componentId) return component;
-
-    // Search children if it's a list component
-    if ('children' in component && component.children) {
-      const child = component.children.find((c) => c.id === componentId);
-      if (child) return child;
-    }
-  }
-
-  return undefined;
+export const selectHasHomeView = (state: RootState): boolean => {
+  return state.view.allViews.some((v) => v.is_home === true);
 };
 
 /**
- * Get children of a component (for List components)
+ * Get the home view if configured
  */
-export const selectComponentChildren = (state: RootState, componentId: NodeId): ViewComponent[] => {
-  const component = selectComponentById(state, componentId);
-  if (!component || !('children' in component)) return [];
-  return component.children ?? [];
+export const selectHomeView = (state: RootState): ResolvedView | undefined => {
+  return state.view.allViews.find((v) => v.is_home === true);
 };
 
 /**
- * Get the parent component of a given component
+ * Get node info for a component (for mutations)
+ * Uses comp_id to look up the associated node_id and ref_id
  */
-export const selectComponentParent = (state: RootState, componentId: NodeId): ViewComponent | null => {
+export const selectComponentNodeInfo = (
+  state: RootState,
+  comp_id: CompId
+): { node_id: NodeId; ref_id: RefId } | undefined => {
+  return state.view.componentNodeMap[comp_id];
+};
+
+/**
+ * Get a component by comp_id from the current view
+ */
+export const selectComponentByCompId = (
+  state: RootState,
+  comp_id: CompId
+): ResolvedNode | undefined => {
   const components = state.view.currentView?.components ?? [];
 
-  for (const component of components) {
-    if ('children' in component && component.children) {
-      if (component.children.some((c) => c.id === componentId)) {
-        return component;
+  function findComponent(nodes: ResolvedNode[]): ResolvedNode | undefined {
+    for (const node of nodes) {
+      if (node.comp_id === comp_id) return node;
+      if (node.children) {
+        const found = findComponent(node.children);
+        if (found) return found;
       }
     }
+    return undefined;
   }
 
-  return null;
+  return findComponent(components);
 };
 
 /**
- * Get all components as a flat map by ID
+ * Get all components as a flat map by comp_id
  */
-export const selectComponentsMap = (state: RootState): Record<NodeId, ViewComponent> => {
-  const map: Record<NodeId, ViewComponent> = {};
+export const selectComponentsMap = (state: RootState): Record<CompId, ResolvedNode> => {
+  const map: Record<CompId, ResolvedNode> = {};
   const components = state.view.currentView?.components ?? [];
 
-  function addToMap(component: ViewComponent) {
-    map[component.id] = component;
-    if ('children' in component && component.children) {
-      component.children.forEach(addToMap);
-    }
+  function addToMap(node: ResolvedNode) {
+    map[node.comp_id] = node;
+    node.children?.forEach(addToMap);
   }
 
   components.forEach(addToMap);
@@ -436,74 +627,20 @@ export const selectComponentsMap = (state: RootState): Record<NodeId, ViewCompon
 };
 
 /**
- * Get the next sibling of a component
- */
-export const selectNextComponent = (state: RootState, componentId: NodeId): ViewComponent | undefined => {
-  const components = state.view.currentView?.components ?? [];
-
-  // Check top-level components
-  const topLevelIndex = components.findIndex((c) => c.id === componentId);
-  if (topLevelIndex !== -1 && topLevelIndex < components.length - 1) {
-    return components[topLevelIndex + 1];
-  }
-
-  // Check nested components
-  for (const component of components) {
-    if ('children' in component && component.children) {
-      const childIndex = component.children.findIndex((c) => c.id === componentId);
-      if (childIndex !== -1 && childIndex < component.children.length - 1) {
-        return component.children[childIndex + 1];
-      }
-    }
-  }
-
-  return undefined;
-};
-
-/**
- * Get the previous sibling of a component
- */
-export const selectPreviousComponent = (state: RootState, componentId: NodeId): ViewComponent | undefined => {
-  const components = state.view.currentView?.components ?? [];
-
-  // Check top-level components
-  const topLevelIndex = components.findIndex((c) => c.id === componentId);
-  if (topLevelIndex > 0) {
-    return components[topLevelIndex - 1];
-  }
-
-  // Check nested components
-  for (const component of components) {
-    if ('children' in component && component.children) {
-      const childIndex = component.children.findIndex((c) => c.id === componentId);
-      if (childIndex > 0) {
-        return component.children[childIndex - 1];
-      }
-    }
-  }
-
-  return undefined;
-};
-
-// ============ TYPE-SPECIFIC COMPONENT SELECTORS ============
-
-/**
  * Select all components of a specific type from the current view
  */
-export const selectComponentsByType = <T extends ViewComponent>(
+export const selectComponentsByType = (
   state: RootState,
-  type: ViewComponent['type']
-): T[] => {
-  const components: T[] = [];
+  type: ComponentType
+): ResolvedNode[] => {
+  const components: ResolvedNode[] = [];
   const allComponents = state.view.currentView?.components ?? [];
 
-  function findByType(component: ViewComponent) {
-    if (component.type === type) {
-      components.push(component as T);
+  function findByType(node: ResolvedNode) {
+    if (node.type === type) {
+      components.push(node);
     }
-    if ('children' in component && component.children) {
-      component.children.forEach(findByType);
-    }
+    node.children?.forEach(findByType);
   }
 
   allComponents.forEach(findByType);

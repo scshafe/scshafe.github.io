@@ -1,284 +1,335 @@
 # Data Persistence Architecture
 
-This document outlines where each categorical piece of data is persisted, how it is seeded, reset, transferred through the server, and handled by the frontend.
+This document outlines where each categorical piece of data is persisted, how it is reset, transferred through the server, and handled by the frontend.
 
 ---
 
 ## Overview
 
 The application uses a **JSON-based persistence model**:
-- **Data JSON** (`content/data.json`) - Primary data store for views, components, posts, relationships, and content
-- **Settings JSON** (`content/settings.json`) - Theme and navigation settings
-- **Markdown Files** (`content/posts/*.md`) - Blog post content files
+- **Nodes** (`content/nodes/{node_id}.json`) - Tree structure positions
+- **References** (`content/references/{ref_id}.json`) - Component indirection with overrides
+- **Components** (`content/components/{Type}/{comp_id}.json`) - Content and configuration
+- **Tags** (`content/tags/{tag_id}.json`) - Content categorization
+- **Settings** (`content/settings/`) - Site config, navigation, themes
+- **Posts** (`content/posts/*.md`) - Blog post markdown files
 - **Metadata JSON** (`content/metadata.json`) - Build-time export only, not used during development
 
 ---
 
 ## Data Categories
 
-### 1. Views
+### 1. Nodes
+
+**Purpose**: Tree structure positions linking to references
+
+**Persistence Location**: `content/nodes/{node_id}.json` files
+
+**Structure**:
+```json
+{
+  "node_id": 1234567890,
+  "ref_id": 2345678901,
+  "parent_node_id": null,
+  "previous_node_id": null,
+  "next_node_id": 1234567891,
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z"
+}
+```
+
+**Key Concepts**:
+- `node_id` - Primary key, random 32-bit unsigned integer
+- `ref_id` - Points to the Reference for this node
+- `parent_node_id` - Parent node (null for root nodes)
+- `previous_node_id` / `next_node_id` - Doubly-linked list for sibling ordering
+
+**Server Transfer**:
+- `GET /nodes` → Returns all nodes
+- `GET /nodes/{node_id}` → Get single node
+- `POST /nodes` → Create node
+- `PUT /nodes/{node_id}` → Update node
+- `DELETE /nodes/{node_id}` → Delete node (cascades to reference)
+- `PUT /nodes/{node_id}/move` → Reposition node in tree
+
+---
+
+### 2. References
+
+**Purpose**: Indirection layer between nodes and components, enabling sharing and overrides
+
+**Persistence Location**: `content/references/{ref_id}.json` files
+
+**Structure**:
+```json
+{
+  "ref_id": 2345678901,
+  "node_id": 1234567890,
+  "comp_id": 3456789012,
+  "overrides": {
+    "title": "Custom title for this location"
+  },
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z"
+}
+```
+
+**Key Concepts**:
+- `ref_id` - Primary key
+- `node_id` - Back-reference to owning node (1:1 relationship)
+- `comp_id` - Points to the Component
+- `overrides` - Location-specific config that merges with component config
+
+**Server Transfer**:
+- `GET /references` → Returns all references
+- `GET /references/{ref_id}` → Get single reference
+- `POST /references` → Create reference
+- `PUT /references/{ref_id}` → Update reference (typically overrides)
+- `DELETE /references/{ref_id}` → Delete reference
+
+---
+
+### 3. Components
+
+**Purpose**: Reusable content and configuration
+
+**Persistence Location**: `content/components/{Type}/{comp_id}.json` files
+
+**Structure** (example: ViewContainer):
+```json
+{
+  "comp_id": 3456789012,
+  "type": "ViewContainer",
+  "config": {
+    "path": "/about",
+    "name": "about",
+    "title": "About",
+    "browser_title": "About | My Site",
+    "description": null,
+    "tag_ids": [4567890123],
+    "child_node_id": 1234567892
+  },
+  "reference_count": 1,
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z"
+}
+```
+
+**Component Types**:
+
+| Type | Directory | Description |
+|------|-----------|-------------|
+| ViewContainer | `components/ViewContainer/` | Page/view with path and metadata |
+| ListContainer | `components/ListContainer/` | Container for list items |
+| InlineContainer | `components/InlineContainer/` | Inline content wrapper |
+| StyleContainer | `components/StyleContainer/` | Styling wrapper |
+| SectionUnit | `components/SectionUnit/` | Section heading |
+| PlainTextUnit | `components/PlainTextUnit/` | Plain text content |
+| AlertUnit | `components/AlertUnit/` | Alert boxes |
+| MarkdownUnit | `components/MarkdownUnit/` | Markdown content |
+| LinkUnit | `components/LinkUnit/` | Link display |
+| ImageMedia | `components/ImageMedia/` | Image display |
+| VideoMedia | `components/VideoMedia/` | Video display |
+| PDFMedia | `components/PDFMedia/` | PDF display |
+| ExperienceComponent | `components/ExperienceComponent/` | Work experience |
+| TagListComponent | `components/TagListComponent/` | Tag listing |
+
+**Server Transfer**:
+- `GET /components` → Returns all components
+- `GET /components/{type}` → Components by type
+- `GET /components/{type}/{comp_id}` → Get single component
+- `POST /components/{type}` → Create component
+- `PUT /components/{type}/{comp_id}` → Update component
+- `DELETE /components/{type}/{comp_id}` → Delete component
+- `GET /components/{type}/{comp_id}/usages` → Find all references using this component
+
+---
+
+### 4. Tags
+
+**Purpose**: Content categorization for views
+
+**Persistence Location**: `content/tags/{tag_id}.json` files
+
+**Structure**:
+```json
+{
+  "tag_id": 4567890123,
+  "label": "nextjs",
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z"
+}
+```
+
+**Server Transfer**:
+- `GET /tags` → Returns all tags
+- `GET /tags/{tag_id}` → Get single tag
+- `POST /tags` → Create tag
+- `PUT /tags/{tag_id}` → Update tag
+- `DELETE /tags/{tag_id}` → Delete tag
+
+---
+
+### 5. Views (as ViewContainer Components)
 
 **Purpose**: Page configurations with path, title, and component hierarchy
 
-**Persistence Location**: `data.json` → `views` object
+Views are represented as ViewContainer components. A "view" is:
+- A **Node** (the root node for this view)
+- Which has a **Reference**
+- Which points to a **ViewContainer** component
 
-**Structure**:
+**Structure** (ViewContainer config):
 ```json
 {
-  "views": {
-    "view_home": {
-      "id": "view_home",
-      "view_type": "page",
-      "url_id": null,
-      "path": "/",
-      "name": "Home",
-      "title": "Welcome",
-      "browser_title": "Home | My Blog",
-      "description": "Welcome to my personal blog",
-      "is_home": true,
-      "parent_view_id": null,
-      "sort_order": 0
-    }
-  }
+  "path": "/about",
+  "name": "about",
+  "title": "About",
+  "browser_title": "About | My Site",
+  "description": "About page description",
+  "tag_ids": [4567890123, 4567890124],
+  "child_node_id": 1234567892
 }
 ```
 
-**Seeding**: `content/seed_data.json` → `views` object
-
-**Reset**: `npm run data:reset` copies `seed_data.json` → `data.json`
-
-**Server Transfer**:
-- `GET /views` → Returns all views with resolved components
-- `PUT /views/{id}` → Creates/updates a view
-- `DELETE /views/{id}` → Deletes view and cascades to children
-
 **Frontend Handling**:
-- `lib/content/views.server.ts` → `getViewsConfig()` fetches views
+- `lib/content/components.ts` → TypeScript type definitions
 - `app/[[...viewPath]]/page.tsx` → Dynamic routing resolves views by path
-- `app/components/settings/ViewsTab.tsx` → Settings UI for managing views
+- `components/settings/ViewsTab.tsx` → Settings UI for managing views
 
 ---
 
-### 2. Components
+### 6. Navigation
 
-**Purpose**: Reusable UI building blocks within views (Title, List, MarkdownEditor, etc.)
-
-**Persistence Location**: `data.json` → `components` object
-
-**Structure**:
-```json
-{
-  "components": {
-    "comp_home_title": {
-      "id": "comp_home_title",
-      "component_type": "Title",
-      "config": {"showTitle": true, "level": "h1"},
-      "visible": true
-    }
-  }
-}
-```
-
-**Seeding**: `content/seed_data.json` → `components` object
-
-**Reset**: Same as views - `npm run data:reset`
-
-**Server Transfer**:
-- Components are returned nested within views via `GET /views/{id}`
-- `PUT /components/{id}` → Creates/updates a component
-- `DELETE /components/{id}` → Deletes component
-
-**Frontend Handling**:
-- `lib/content/views.ts` → TypeScript type definitions for all component types
-- `app/components/views/ViewComponentRenderer.tsx` → Routes component types to renderers
-- `app/components/views/*.tsx` → Individual component implementations
-
----
-
-### 3. Relationships (Parent-Child Hierarchy)
-
-**Purpose**: Links views to components and components to child components
-
-**Persistence Location**: `data.json` → `relationships` object
-
-**Structure**:
-```json
-{
-  "relationships": {
-    "rel_home_1": {
-      "id": "rel_home_1",
-      "parent_id": "view_home",
-      "child_id": "comp_home_title",
-      "sort_order": 0
-    }
-  }
-}
-```
-
-**Seeding**: `content/seed_data.json` → `relationships` object
-
-**Reset**: Same as views - `npm run data:reset`
-
-**Server Transfer**:
-- Relationships are resolved when fetching views (components are nested)
-- Updates to component order update `sort_order` in relationships
-
-**Frontend Handling**:
-- Relationships are transparent to frontend - views arrive with nested `components[]` array
-- `app/components/views/ViewRenderer.tsx` → Renders components in order
-
----
-
-### 4. Content (Markdown)
-
-**Purpose**: Rich text content for views (e.g., home intro, about bio)
-
-**Persistence Location**: `data.json` → `content` object
-
-**Structure**:
-```json
-{
-  "content": {
-    "view_home": {
-      "home_intro": "# Welcome to My Blog\n\nThis is my personal space..."
-    }
-  }
-}
-```
-
-**Seeding**: `content/seed_data.json` → `content` object
-
-**Reset**: Same as views - `npm run data:reset`
-
-**Server Transfer**:
-- `PUT /views/{id}/content` → Updates view content by key
-- Content is included in view responses as `content: { [key]: markdown }`
-
-**Frontend Handling**:
-- `app/components/views/MarkdownViewComponent.tsx` → Renders and edits markdown
-- Content is accessed via `view.content?.[contentKey]`
-
----
-
-### 5. Posts
-
-**Purpose**: Blog post metadata and categorization
+**Purpose**: Site name, header links, footer links
 
 **Persistence Location**:
-- Metadata: `data.json` → `posts` object
-- Content: `content/posts/{slug}-post.md` files
+- `content/settings/site.json` - Site name, default home
+- `content/settings/navbar/{nav_bar_id}.json` - Header nav items
+- `content/settings/footer/{footer_id}.json` - Footer nav items
 
-**Structure**:
+**Site Config Structure**:
 ```json
 {
-  "posts": {
-    "post_getting_started": {
-      "id": "post_getting_started",
-      "slug": "getting-started-with-nextjs",
-      "title": "Getting Started with Next.js",
-      "date": 1705276800000,
-      "categories": ["nextjs", "react", "tutorial"],
-      "layout": "post",
-      "toc": true,
-      "is_series": false,
-      "series_title": null
-    }
+  "site_name": "My Blog",
+  "default_home_link": {
+    "basic_link_id": 6789012345,
+    "label": "Home",
+    "icon": null,
+    "view_node_id": 1234567890,
+    "section_node_id": null
   }
 }
 ```
 
-**Seeding**: `content/seed_data.json` → `posts` object
-
-**Reset**: `npm run data:reset` (note: markdown files are NOT deleted)
+**NavBar Item Structure**:
+```json
+{
+  "nav_bar_id": 5678901234,
+  "position": "left",
+  "order": 0,
+  "internal_link": {
+    "basic_link_id": 6789012345,
+    "label": "Home",
+    "icon": null,
+    "view_node_id": 1234567890,
+    "section_node_id": null
+  },
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z"
+}
+```
 
 **Server Transfer**:
-- `GET /posts` → Returns all posts with resolved content
-- `PUT /posts/{id}` → Creates/updates post metadata
-- `DELETE /posts/{id}` → Deletes post (metadata only)
-
-**Frontend Handling**:
-- `lib/content/posts.ts` → `getAllPosts()` fetches posts
-- `app/posts/[slug]/page.tsx` → Individual post pages
-- `app/components/views/BlogPostsListViewComponent.tsx` → Post listing
+- `GET /navigation` → Returns aggregated navigation config
+- `PUT /navigation` → Updates navigation config
+- `GET /navbar` → Returns all navbar items
+- `POST /navbar` → Create navbar item
+- `PUT /navbar/{nav_bar_id}` → Update navbar item
+- `DELETE /navbar/{nav_bar_id}` → Delete navbar item
+- (Same pattern for `/footer`)
 
 ---
 
-### 6. Themes
+### 7. Themes
 
 **Purpose**: Color schemes and visual styling
 
-**Persistence Location**: `content/settings.json` → `themes` object
+**Persistence Location**:
+- `content/settings/themes/config.json` - Active theme, color scheme preference
+- `content/settings/themes/custom/{theme_id}.json` - Custom theme definitions
 
-**Structure**:
+**Config Structure**:
 ```json
 {
-  "themes": {
-    "activeThemeId": "midnight-blue",
-    "colorSchemePreference": "system",
-    "customThemes": []
-  }
+  "active_theme_id": 7890123456,
+  "color_scheme_preference": "system"
 }
 ```
 
-**Seeding**: `content/reseed_settings.json` → copied to `settings.json`
-
-**Reset**: `npm run data:reset` copies `reseed_settings.json` → `settings.json`
+**Theme Structure**:
+```json
+{
+  "theme_id": 7890123456,
+  "name": "Midnight Blue",
+  "color_scheme": "dark",
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z"
+}
+```
 
 **Server Transfer**:
 - `GET /themes` → Returns theme configuration
 - `PUT /themes` → Updates theme configuration
-- Changes written directly to `settings.json`
-
-**Frontend Handling**:
-- `lib/content/themes.server.ts` → `getThemeConfig()` reads themes
-- `app/components/theme/ThemeProvider.tsx` → Applies theme CSS variables
-- `app/components/settings/ThemeTab.tsx` → Theme selector UI
+- `GET /themes/{theme_id}` → Get single theme
+- `POST /themes` → Create custom theme
+- `PUT /themes/{theme_id}` → Update theme
+- `DELETE /themes/{theme_id}` → Delete theme
 
 ---
 
-### 7. Navigation
+### 8. Posts
 
-**Purpose**: Site name, header links, footer links
+**Purpose**: Blog post metadata and content
 
-**Persistence Location**: `content/settings.json` → `navigation` object
+**Persistence Location**: `content/posts/{slug}-post.md` files with frontmatter
 
 **Structure**:
-```json
-{
-  "navigation": {
-    "siteName": "My Blog",
-    "header": [
-      {
-        "id": "nav_header_1",
-        "label": "Home",
-        "linkType": "view",
-        "viewId": "view_home",
-        "url": null,
-        "position": "left",
-        "icon": null,
-        "external": false
-      }
-    ],
-    "footer": [...]
-  }
-}
+```markdown
+---
+title: Getting Started with Next.js
+date: 2024-01-15
+categories:
+  - nextjs
+  - react
+layout: post
+toc: true
+is_series: false
+---
+
+Post content here...
 ```
 
-**Seeding**: `content/reseed_settings.json` → copied to `settings.json`
-
-**Reset**: `npm run data:reset` copies `reseed_settings.json` → `settings.json`
-
 **Server Transfer**:
-- `GET /navigation` → Returns navigation configuration
-- `PUT /navigation` → Updates navigation configuration
-- Changes written directly to `settings.json`
+- `GET /posts` → Returns all posts with resolved content
+- `POST /post` → Creates post
+- `PUT /post/{slug}` → Updates post
+- `DELETE /post/{slug}` → Deletes post file
 
-**Frontend Handling**:
-- `lib/content/navigation.ts` → TypeScript types for NavItem
-- `app/layout.tsx` → Passes nav config to Header/Footer
-- `app/components/layout/Header.tsx` → Renders nav items, resolves view paths
-- `app/components/layout/Footer.tsx` → Same for footer
-- `app/components/settings/NavigationTab.tsx` → Nav editor UI
+---
+
+## Entity Relationships
+
+```
+Node ──1:1──► Reference ──*:1──► Component
+  │                                  │
+  │                                  └── Container extends Component
+  │                                        └── child_node_id ──► Node (first child)
+  │
+  └── parent_node_id ──► Node (parent)
+  └── previous_node_id ──► Node (previous sibling)
+  └── next_node_id ──► Node (next sibling)
+```
 
 ---
 
@@ -287,21 +338,28 @@ The application uses a **JSON-based persistence model**:
 ### Author Mode (Development)
 
 ```
-Frontend (Next.js)    ←── API ──→    Backend (Flask)    ←──→    JSON Files
+Frontend (Next.js)    ←── API ──→    Backend (Flask)    ←──→    JSON/MD Files
     localhost:3000                       localhost:3001           content/
 
-  ViewPageClient                         /views                   data.json
-  SettingsPage                          /posts                   settings.json
-  Header/Footer                         /navigation
-                                        /themes
+  ViewPageClient                         /nodes                  nodes/*.json
+  SettingsPage                          /references             references/*.json
+  Header/Footer                         /components             components/{Type}/*.json
+                                        /tags                   tags/*.json
+                                        /navigation             settings/navbar/*.json
+                                        /themes                 settings/themes/
+                                        /posts                  posts/*.md
 ```
 
 ### Publish Mode (Build)
 
 ```
-JSON Files     ──export──→    metadata.json    ──build──→    Static HTML
- data.json                                                      /out
- settings.json               (intermediate)
+JSON/MD Files  ──export──→    metadata.json    ──build──→    Static HTML
+ nodes/*.json                                                    /out
+ references/*.json           (intermediate)
+ components/{Type}/*.json
+ tags/*.json
+ settings/
+ posts/*.md
 ```
 
 ---
@@ -310,23 +368,30 @@ JSON Files     ──export──→    metadata.json    ──build──→   
 
 | Command | Effect |
 |---------|--------|
-| `npm run data:reset` | Resets both `data.json` and `settings.json` from seed files |
-| `npm run data:reset-data` | Only resets `data.json` from `seed_data.json` |
-| `npm run data:reset-settings` | Only resets `settings.json` from `reseed_settings.json` |
+| `npm run data:reset` | Resets all data (entities, settings, sample content) |
+| `npm run data:reset-data` | Only resets entity data (nodes, references, components) |
+| `npm run data:reset-settings` | Only resets settings (site, navigation, themes) |
+| `npm run data:reset-interactive` | Interactive reset with options |
 
 ---
 
 ## File Summary
 
-| File | Purpose |
-|------|---------|
-| `content/data.json` | JSON database (source of truth for views, components, posts) |
-| `content/seed_data.json` | Template for resetting data.json |
-| `content/settings.json` | Theme + navigation settings |
-| `content/reseed_settings.json` | Template for resetting settings |
-| `content/metadata.json` | Build-time export only |
+| File/Directory | Purpose |
+|----------------|---------|
+| `content/nodes/*.json` | Node entities (tree structure) |
+| `content/references/*.json` | Reference entities (indirection layer) |
+| `content/components/{Type}/*.json` | Component entities (content/config) |
+| `content/tags/*.json` | Tag entities |
+| `content/settings/site.json` | Site configuration |
+| `content/settings/navbar/*.json` | NavBar entities |
+| `content/settings/footer/*.json` | Footer entities |
+| `content/settings/themes/config.json` | Theme configuration |
+| `content/settings/themes/custom/*.json` | Custom theme definitions |
 | `content/posts/*.md` | Post markdown content |
-| `backend/reset_and_seed.py` | Reset script |
+| `content/metadata.json` | Build-time export only |
+| `backend/reset_and_seed.py` | Reset script (creates default data) |
 | `backend/server.py` | Flask API server |
 | `backend/database.py` | JSON database CRUD functions |
-| `backend/export_metadata.py` | Exports data.json to metadata.json for builds |
+| `backend/entities/` | Python entity classes |
+| `backend/export_metadata.py` | Exports JSON to metadata.json for builds |

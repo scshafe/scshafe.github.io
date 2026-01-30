@@ -1,7 +1,7 @@
 """
 Content routes for the Author Mode Server.
 
-Handles generic content read/write operations for about, home, blog, posts, and experiences.
+Handles generic content read/write operations for about, home, and experiences.
 """
 
 import re
@@ -10,8 +10,6 @@ from flask import Blueprint, request, jsonify
 from pathlib import Path
 
 from database import (
-    get_post_by_slug,
-    save_post,
     get_experience_by_id,
     save_experience,
     get_setting,
@@ -23,7 +21,6 @@ content_bp = Blueprint('content', __name__)
 # Get the root directory (parent of backend/)
 ROOT_DIR = Path(__file__).parent.parent.parent
 CONTENT_DIR = ROOT_DIR / 'content'
-POSTS_DIR = CONTENT_DIR / 'posts'
 EXPERIENCES_DIR = CONTENT_DIR / 'experiences'
 
 
@@ -60,32 +57,6 @@ def get_content():
                 'metadata': home_metadata,
                 'content': content,
                 'slug': 'home'
-            })
-
-        elif content_type == 'blog':
-            # Blog page only has metadata (title, description), no markdown content
-            blog_metadata = {
-                'title': get_setting('blog_title') or 'Blog',
-                'description': get_setting('blog_description') or ''
-            }
-            return jsonify({
-                'metadata': blog_metadata,
-                'content': '',
-                'slug': 'blog'
-            })
-
-        elif content_type == 'post' and slug:
-            file_path = POSTS_DIR / f'{slug}-post.md'
-            if not file_path.exists():
-                return jsonify({'error': 'Post not found'}), 404
-
-            content = file_path.read_text()
-            post_metadata = get_post_by_slug(slug)
-
-            return jsonify({
-                'metadata': post_metadata or {},
-                'content': content,
-                'slug': slug
             })
 
         elif content_type == 'experience' and slug:
@@ -153,42 +124,6 @@ def save_content():
             print(json.dumps({'title': content_metadata.get('title'), 'description': content_metadata.get('description')}, indent=2))
             set_setting('home_title', content_metadata.get('title', 'Home'))
             set_setting('home_description', content_metadata.get('description', ''))
-            file_path.write_text(content)
-
-        elif content_type == 'blog':
-            # Blog page only has metadata (title, description), no markdown content
-            print("~~ Save Blog Content ~~")
-            print(json.dumps({'title': content_metadata.get('title'), 'description': content_metadata.get('description')}, indent=2))
-            set_setting('blog_title', content_metadata.get('title', 'Blog'))
-            set_setting('blog_description', content_metadata.get('description', ''))
-
-        elif content_type == 'post':
-            # For new posts, generate slug from title
-            if is_new or not slug:
-                title = content_metadata.get('title', '')
-                if not title:
-                    return jsonify({'error': 'Title is required'}), 400
-                slug = re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-')
-
-            file_path = POSTS_DIR / f'{slug}-post.md'
-            post_id = f'post-{slug}'
-
-            print("~~ Save Post Content ~~")
-            print(json.dumps({'id': post_id, 'slug': slug, 'title': content_metadata.get('title'), 'isNew': is_new}, indent=2))
-
-            # Save to database
-            save_post({
-                'id': post_id,
-                'slug': slug,
-                'title': content_metadata.get('title', ''),
-                'date': content_metadata.get('date'),
-                'categories': content_metadata.get('categories', []),
-                'layout': content_metadata.get('layout', 'post'),
-                'toc': content_metadata.get('toc', False),
-                'is_series': content_metadata.get('is_series', False),
-                'series_title': content_metadata.get('series_title')
-            })
-
             file_path.write_text(content)
 
         elif content_type == 'experience':

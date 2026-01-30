@@ -7,341 +7,81 @@
     "customThemes": []
   },
   "navigation": {
-    "siteName": "My Blog",
+    "siteName": "My Site",
     "header": [
       {
-        "id": "nav-home",
-        "label": "Home",
+        "id": 2191922864,
+        "position": "right",
+        "order": 0,
+        "label": "New Link",
         "linkType": "view",
         "url": "/",
-        "position": "left",
         "icon": null,
         "external": false,
-        "viewId": "view-home"
-      },
-      {
-        "id": "nav-blog",
-        "label": "Blog",
-        "linkType": "view",
-        "url": "/blog",
-        "position": "left",
-        "icon": null,
-        "external": false,
-        "viewId": "view-blog"
-      },
-      {
-        "id": "nav-about",
-        "label": "About",
-        "linkType": "view",
-        "url": "/about",
-        "position": "right",
-        "icon": null,
-        "external": false,
-        "viewId": "view-about"
+        "viewId": 179158165
       }
     ],
-    "footer": [
-      {
-        "id": "nav-github",
-        "label": "GitHub",
-        "linkType": "url",
-        "url": "https://github.com",
-        "position": "left",
-        "icon": null,
-        "external": true
-      }
-    ]
-  },
-  "posts": {
-    "id": "posts",
-    "type": "Posts",
-    "items": {
-      "post-getting-started": {
-        "id": "post-getting-started",
-        "type": "Post",
-        "parentId": "posts",
-        "slug": "getting-started",
-        "title": "Getting Started with This Blog",
-        "date": "2024-01-15",
-        "categories": [
-          "tutorial",
-          "meta"
-        ],
-        "layout": "post",
-        "toc": true,
-        "is_series": false,
-        "series_title": null
-      },
-      "post-hello-world": {
-        "id": "post-hello-world",
-        "type": "Post",
-        "parentId": "posts",
-        "slug": "hello-world",
-        "title": "Hello World",
-        "date": "2024-01-01",
-        "categories": [
-          "announcement"
-        ],
-        "layout": "post",
-        "toc": false,
-        "is_series": false,
-        "series_title": null
-      }
-    }
-  },
-  "experiences": {
-    "id": "experiences",
-    "type": "Experiences",
-    "order": [
-      "exp-example-company"
-    ],
-    "items": {
-      "exp-example-company": {
-        "id": "exp-example-company",
-        "type": "Experience",
-        "component_type": "Experience",
-        "parentId": "experiences",
-        "title": "Software Engineer",
-        "company": "Example Company",
-        "startDate": "2022-01",
-        "endDate": "Present",
-        "image": "",
-        "backgroundColor": "#1a1a2e",
-        "textColor": "#ffffff",
-        "accentColor": "#4a9eff",
-        "sort_order": 0,
-        "config": {
-          "title": "Software Engineer",
-          "company": "Example Company",
-          "startDate": "2022-01",
-          "endDate": "Present",
-          "image": "",
-          "backgroundColor": "#1a1a2e",
-          "textColor": "#ffffff",
-          "accentColor": "#4a9eff"
-        },
-        "visible": true
-      }
-    }
+    "footer": []
   },
   "views": {
     "id": "views",
     "type": "Views",
-    "defaultHomeViewId": "view-home",
+    "default_home_node_id": null,
     "items": [
       {
-        "id": "view-home",
-        "type": "View",
-        "view_type": "page",
-        "viewType": "page",
-        "url_id": null,
-        "urlId": null,
-        "parentId": "views",
-        "path": "/",
-        "name": "Home",
-        "title": "Welcome",
-        "browserTitle": "Home | My Blog",
-        "description": "Welcome to my personal blog",
-        "isHome": true,
-        "parentViewId": null,
-        "content": {
-          "home-intro": "Welcome to my blog! This is where I share my thoughts, projects, and learnings.\n\n## What You'll Find Here\n\n- **Technical tutorials** - Step-by-step guides on various topics\n- **Project updates** - Progress on things I'm building\n- **Thoughts and reflections** - Ideas and observations\n\nFeel free to explore and reach out if you have any questions!"
-        },
+        "comp_id": 1137277298,
+        "root_node_id": 179158165,
+        "path": "/page-1",
+        "name": "Page 1",
+        "title": "Page 1",
+        "browser_title": "Page 1",
+        "description": "",
+        "is_home": false,
         "components": [
           {
-            "id": "comp-home-title",
-            "type": "Title",
-            "config": {},
-            "parentId": "view-home",
-            "previousId": null
-          },
-          {
-            "id": "comp-home-intro",
-            "type": "MarkdownEditor",
+            "node_id": 3304757236,
+            "ref_id": 3158703056,
+            "comp_id": 2620447481,
+            "type": "PlainTextUnit",
             "config": {
-              "contentKey": "home-intro"
+              "content": "Enter text here..."
             },
-            "parentId": "view-home",
-            "previousId": "comp-home-title"
+            "children": []
           },
           {
-            "id": "comp-home-posts",
-            "type": "List",
+            "node_id": 2083022459,
+            "ref_id": 2738864414,
+            "comp_id": 1609587960,
+            "type": "LinkUnit",
             "config": {
-              "listType": "BlogPost",
-              "displayMode": "list",
-              "name": "Recent Posts",
-              "showName": true,
-              "collapsible": false,
-              "defaultExpanded": true,
-              "showAddButton": true,
-              "maxItems": 3
+              "basic_link": null
+            },
+            "children": []
+          },
+          {
+            "node_id": 256587317,
+            "ref_id": 2999416985,
+            "comp_id": 1327444000,
+            "type": "ListContainer",
+            "config": {
+              "list_type": "View",
+              "display_mode": "list",
+              "name": "New List",
+              "show_name": false,
+              "child_node_id": 1505996043
             },
             "children": [
               {
-                "id": "comp-home-post-getting-started",
-                "type": "BlogPost",
+                "node_id": 1505996043,
+                "ref_id": 4068897729,
+                "comp_id": 4188686504,
+                "type": "LinkUnit",
                 "config": {
-                  "postSlug": "getting-started",
-                  "showExcerpt": true,
-                  "showDate": true,
-                  "showTags": true
+                  "basic_link": null
                 },
-                "parentId": "comp-home-posts",
-                "previousId": null
-              },
-              {
-                "id": "comp-home-post-hello-world",
-                "type": "BlogPost",
-                "config": {
-                  "postSlug": "hello-world",
-                  "showExcerpt": true,
-                  "showDate": true,
-                  "showTags": true
-                },
-                "parentId": "comp-home-posts",
-                "previousId": "comp-home-post-getting-started"
+                "children": []
               }
-            ],
-            "parentId": "view-home",
-            "previousId": "comp-home-intro"
-          }
-        ]
-      },
-      {
-        "id": "view-about",
-        "type": "View",
-        "view_type": "page",
-        "viewType": "page",
-        "url_id": null,
-        "urlId": null,
-        "parentId": "views",
-        "path": "/about",
-        "name": "About",
-        "title": "About Me",
-        "browserTitle": "About | My Blog",
-        "description": "Learn more about me",
-        "isHome": false,
-        "parentViewId": null,
-        "content": {
-          "about-intro": "# About Me\n\nHi there! I'm a developer who loves building things and learning new technologies.\n\n## Background\n\nI have experience in web development, systems programming, and various other areas of software engineering.\n\n## Interests\n\n- Open source software\n- Developer tools\n- Technical writing\n- Learning new programming languages\n\n## Experience\n\nBelow you'll find some of my professional experience:"
-        },
-        "components": [
-          {
-            "id": "comp-about-title",
-            "type": "Title",
-            "config": {},
-            "parentId": "view-about",
-            "previousId": null
-          },
-          {
-            "id": "comp-about-intro",
-            "type": "MarkdownEditor",
-            "config": {
-              "contentKey": "about-intro"
-            },
-            "parentId": "view-about",
-            "previousId": "comp-about-title"
-          },
-          {
-            "id": "comp-about-experience",
-            "type": "List",
-            "config": {
-              "listType": "Experience",
-              "displayMode": "list",
-              "name": "Experience",
-              "showName": true,
-              "collapsible": false,
-              "defaultExpanded": true,
-              "showAddButton": true
-            },
-            "children": [
-              {
-                "id": "exp-example-company",
-                "type": "Experience",
-                "config": {
-                  "title": "Software Engineer",
-                  "company": "Example Company",
-                  "startDate": "2022-01",
-                  "endDate": "Present",
-                  "image": "",
-                  "backgroundColor": "#1a1a2e",
-                  "textColor": "#ffffff",
-                  "accentColor": "#4a9eff"
-                },
-                "parentId": "comp-about-experience",
-                "previousId": null
-              }
-            ],
-            "parentId": "view-about",
-            "previousId": "comp-about-intro"
-          }
-        ]
-      },
-      {
-        "id": "view-blog",
-        "type": "View",
-        "view_type": "page",
-        "viewType": "page",
-        "url_id": null,
-        "urlId": null,
-        "parentId": "views",
-        "path": "/blog",
-        "name": "Blog",
-        "title": "Blog",
-        "browserTitle": "Blog | My Blog",
-        "description": "Read my latest posts",
-        "isHome": false,
-        "parentViewId": null,
-        "content": {},
-        "components": [
-          {
-            "id": "comp-blog-title",
-            "type": "Title",
-            "config": {},
-            "parentId": "view-blog",
-            "previousId": null
-          },
-          {
-            "id": "comp-blog-posts",
-            "type": "List",
-            "config": {
-              "listType": "BlogPost",
-              "displayMode": "list",
-              "name": "Blog Posts",
-              "showName": false,
-              "collapsible": false,
-              "defaultExpanded": true,
-              "showAddButton": true
-            },
-            "children": [
-              {
-                "id": "comp-blogpost-getting-started",
-                "type": "BlogPost",
-                "config": {
-                  "postSlug": "getting-started",
-                  "showExcerpt": true,
-                  "showDate": true,
-                  "showTags": true
-                },
-                "parentId": "comp-blog-posts",
-                "previousId": null
-              },
-              {
-                "id": "comp-blogpost-hello-world",
-                "type": "BlogPost",
-                "config": {
-                  "postSlug": "hello-world",
-                  "showExcerpt": true,
-                  "showDate": true,
-                  "showTags": true
-                },
-                "parentId": "comp-blog-posts",
-                "previousId": "comp-blogpost-getting-started"
-              }
-            ],
-            "parentId": "view-blog",
-            "previousId": "comp-blog-title"
+            ]
           }
         ]
       }

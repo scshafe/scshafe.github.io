@@ -23,7 +23,28 @@
       "Bash(else)",
       "Bash(fi)",
       "Bash(done)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(xargs sed -i '' \"s|from ''@/app/components|from ''@/components|g\")",
+      "Bash(ls:*)",
+      "Bash(test:*)",
+      "Bash(for func in \"selectNode\" \"selectChildren\" \"selectNextSibling\" \"selectPreviousSibling\" \"selectSiblings\" \"selectParent\" \"selectAncestors\" \"selectDescendants\" \"nodesToStore\" \"storeToNodes\" \"insertNodeAfter\" \"removeNode\" \"moveNode\" \"generateViewId\" \"generateComponentId\")",
+      "Bash(do echo \"=== $func ===\")",
+      "Bash(for file in \"app/components/views/ViewComponentRenderer.tsx\" \"app/components/views/ViewRenderer.tsx\" \"app/components/views/MarkdownViewComponent.tsx\" \"app/components/views/BlogPostsListViewComponent.tsx\" \"app/components/settings/ViewsTab.tsx\" \"app/components/settings/ThemeTab.tsx\" \"app/components/layout/Header.tsx\" \"app/components/layout/Footer.tsx\" \"app/components/theme/ThemeProvider.tsx\")",
+      "Bash(do)",
+      "Bash(if [ -f \"/Users/coleshaffer/personal/scshafe.github.io/$file\" ])",
+      "Bash(head:*)",
+      "Bash(source env/bin/activate)",
+      "Bash(source ../env/bin/activate)",
+      "Bash(pkill:*)",
+      "Bash(pip3 show:*)",
+      "Bash(pip3 install:*)",
+      "Bash(curl:*)",
+      "Bash(chmod:*)",
+      "Bash(python:*)",
+      "Bash(npm run generate:schema:*)",
+      "Bash(npx tsc:*)",
+      "Bash(xargs:*)"
     ]
   }
 }
