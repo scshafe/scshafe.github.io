@@ -126,3 +126,29 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+.music-bar {
+  display: block;
+  flex: 1 1 0;
+  min-width: 5px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(142, 238, 255, 0.92), rgba(197, 180, 255, 0.36));
+  opacity: 0.34;
+  transform-origin: bottom;
+}
+
+.music-bar.is-playing {
+  animation: music-pulse 760ms ease-in-out infinite alternate;
+  opacity: 0.92;
+}
+
+@keyframes music-pulse {
+  from {
+    transform: scaleY(0.32);
+    filter: saturate(0.8);
+  }
+  to {
+    transform: scaleY(1);
+    filter: saturate(1.3);
+  }
+}

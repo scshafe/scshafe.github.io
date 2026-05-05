@@ -19,6 +19,7 @@
     "ogl": "latest",
     "tailwind-merge": "latest",
     "tailwindcss": "latest",
+    "tone": "^15.1.22",
     "vaul": "latest"
   },
   "devDependencies": {
