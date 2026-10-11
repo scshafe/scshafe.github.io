@@ -1,7 +1,7 @@
 ---
 title: Mailroom & Switchyard
-kicker: Mail sorting · TypeScript, PostgreSQL
-summary: Switchyard is a small engine that moves units of work through a graph of checks, models and people, durably. Mailroom is the first thing built on it, an inbox sorter that runs on my own hardware and never sends a thing.
+kicker: Small local models · TypeScript
+summary: Switchyard breaks a big job for an AI into a chain of small, simple steps, each easy enough for a small model on my own computer to get right. Mailroom, the first thing built on it, sorts my email.
 figure: switchyard
 order: 2
 featured: true
@@ -22,10 +22,16 @@ spec:
     value: Private for now
 ---
 
-My inbox is mostly not for me: sign-in codes, receipts, newsletters, job alerts and
-promotions, with the occasional email from a person in between. I wanted something to sort
-it the way I would, explain every decision it made, and never be trusted with more than it
-needs. Building that properly needed an engine first.
+Switchyard starts from one premise: a task you might hand to an AI agent can be broken
+down into a graph of smaller tasks, each simple enough that a small model running on my own
+hardware does it reliably. Instead of asking one large model to get everything right at
+once, each step asks a narrow question, like "is this a newsletter: yes, no or unsure?", and
+plain code, a larger model or a person settles whatever the small one can't.
+
+Mailroom is the first thing built on it. My inbox is mostly not for me: sign-in codes,
+receipts, newsletters, job alerts and promotions, with the occasional email from a person in
+between. I wanted something to sort it the way I would, explain every decision it made, and
+never be trusted with more than it needs.
 
 ## Switchyard: a rail yard for work
 

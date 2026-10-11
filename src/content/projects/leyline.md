@@ -1,7 +1,7 @@
 ---
 title: Leyline
 kicker: macOS window manager · Swift
-summary: A native tiling window manager for macOS. Windows arrange themselves, you move between them with the keyboard, and a separate recovery app is there if the resident ever stops answering.
+summary: Keeps the windows on a Mac neatly arranged side by side, so you never drag or resize them by hand. Open an app and it takes its own space; close it and the others fill the gap. It's all driven from the keyboard.
 figure: leyline
 order: 1
 featured: true
@@ -63,10 +63,6 @@ or an insertion at an edge, and only commits when you press Return.
 **When unsure, let go.** If Leyline can't tell which Space a window belongs to, it releases
 management rather than guess. An application that refuses a size gets a crowded layout or an
 explicit refusal, never a silent fight.
-
-**A way back.** Leyline Recovery is a separate app you can open from Finder. If the resident
-or its menu stops responding, Recovery can restart it, turn it off or turn it back on. A
-window manager owns your whole screen, so it has to have an exit that doesn't depend on it.
 
 ## What it doesn't do
 

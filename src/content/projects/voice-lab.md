@@ -1,7 +1,7 @@
 ---
 title: Voice Lab
-kicker: Private voice platform · Python, Qt
-summary: A lab for my own voice, run entirely on hardware I own. It records calibrated sessions, follows my singing back to 2019, and tests open speech models on my voice in blind listening rounds.
+kicker: Speech and singing practice · Python, Qt
+summary: A speech and singing practice lab that runs on my own computers. It clones my voice so I can train my ear to the sounds I don't fully pronounce, and it measures my singing to find the weak spots worth working on.
 figure: voice
 order: 3
 featured: true
@@ -20,11 +20,15 @@ spec:
     value: Private; being prepared for release under MIT
 ---
 
-Voice Lab started with two questions. Could an open speech model learn to sound like me
-without a single recording leaving my own machines? And what has actually changed in my
-singing over the years I've been recording myself on my phone?
+Voice Lab is a speech-therapy tool I'm building for myself. I don't have a significant
+speech impediment, but I don't fully enunciate all of my sounds. The lab trains an open
+speech model to sound like me, and the point of that cloned voice is ear training: listening
+to it teaches me to hear the muffled parts of my own voice.
 
-A voice is biometric data, so the answer to the first question shaped everything else.
+The other half is singing. I want to look at my range and the other dynamic qualities of my
+voice quantitatively, to find the weaknesses I can improve.
+
+A voice is biometric data, so all of it runs on hardware I own.
 
 ## Nothing leaves
 
@@ -62,7 +66,8 @@ base model.
 Since 2019 I've recorded myself singing on my phone, roughly 2,400 voice memos. Voice Lab
 reads that collection without ever writing to it. It separates singing from speech, flags
 noise and music, and is building toward trends in pitch, tuning, vibrato and range, with
-seeded statistics so every chart can be reproduced exactly.
+seeded statistics so every chart can be reproduced exactly. Those numbers are how I'll find
+what in my singing needs work.
 
 ## Where it's going
 
