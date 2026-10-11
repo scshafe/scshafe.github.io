@@ -64,10 +64,6 @@ or an insertion at an edge, and only commits when you press Return.
 management rather than guess. An application that refuses a size gets a crowded layout or an
 explicit refusal, never a silent fight.
 
-**A way back.** Leyline Recovery is a separate app you can open from Finder. If the resident
-or its menu stops responding, Recovery can restart it, turn it off or turn it back on. A
-window manager owns your whole screen, so it has to have an exit that doesn't depend on it.
-
 ## What it doesn't do
 
 Fullscreen and system Spaces aren't managed, and neither are windows on inactive Spaces.
