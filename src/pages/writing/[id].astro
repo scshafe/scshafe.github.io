@@ -1,0 +1,55 @@
+---
+import { render } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import { writing, longDate, isoDate } from "../../lib";
+
+export async function getStaticPaths() {
+  return (await writing()).map((post) => ({ params: { id: post.id }, props: { post } }));
+}
+
+interface Props {
+  post: CollectionEntry<"writing">;
+}
+const { post } = Astro.props;
+const { Content } = await render(post);
+const d = post.data;
+---
+
+<Base title={d.title} description={d.summary} type="article" current="writing">
+  <article class="wrap">
+    <header class="head">
+      <p class="label"><time datetime={isoDate(d.date)}>{longDate(d.date)}</time> · {d.kind}</p>
+      <h1>{d.title}</h1>
+    </header>
+    <div class="prose">
+      <Content />
+    </div>
+    <nav class="pager" aria-label="More writing">
+      <a href="/writing/" class="label">← All writing</a>
+    </nav>
+  </article>
+</Base>
+
+<style>
+  .head {
+    max-width: var(--measure);
+    padding-top: clamp(2rem, 6vw, 4.5rem);
+    padding-bottom: clamp(1.5rem, 4vw, 2.5rem);
+  }
+    .head .label {
+    margin: 0;
+  }
+  h1 {
+    font-size: var(--step-3);
+    letter-spacing: -0.02em;
+    margin: 0.5rem 0 0;
+  }
+  .pager {
+    margin-top: clamp(3rem, 7vw, 5rem);
+  }
+  .pager a {
+    text-decoration: none;
+    color: var(--ink-2);
+  }
+</style>

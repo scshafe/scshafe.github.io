@@ -1,0 +1,75 @@
+---
+// A featured project on the home page: its drawing, then what it is.
+import type { CollectionEntry } from "astro:content";
+import Figure from "./figures/Figure.astro";
+
+interface Props {
+  project: CollectionEntry<"projects">;
+}
+const { project } = Astro.props;
+const { title, kicker, summary, figure, status } = project.data;
+const href = `/projects/${project.id}/`;
+---
+
+<article class="plate">
+  <a class="panel" href={href} tabindex="-1" aria-hidden="true">
+    <Figure name={figure} />
+  </a>
+  <div class="text">
+    <p class="label">{kicker}</p>
+    <h3><a href={href}>{title}</a></h3>
+    <p class="summary">{summary}</p>
+    <p class="label status">{status}</p>
+  </div>
+</article>
+
+<style>
+  .plate {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+    align-items: center;
+    padding-block: clamp(1.75rem, 4vw, 2.75rem);
+    border-top: 1px solid var(--rule);
+  }
+  .panel {
+    display: block;
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: clamp(0.75rem, 2vw, 1.5rem);
+    transition: border-color 160ms ease;
+  }
+  .plate:hover .panel {
+    border-color: var(--rule-strong);
+  }
+    .text .label {
+    margin: 0;
+  }
+  h3 {
+    font-size: var(--step-2);
+    margin: 0.35rem 0 0;
+  }
+  h3 a {
+    text-decoration: none;
+  }
+  h3 a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 1px;
+  }
+  .summary {
+    margin: 0.75rem 0 0;
+    color: var(--ink-2);
+    max-width: 34rem;
+  }
+  .text .status {
+    margin-top: 1.1rem;
+  }
+  @media (max-width: 760px) {
+    .plate {
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+  }
+</style>

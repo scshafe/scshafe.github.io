@@ -1,0 +1,37 @@
+---
+// The link-preview card (public/og.png). Not a page: to re-render it, copy this
+// file to src/pages/og-card.astro, build and preview, screenshot /og-card/ at
+// 1200 x 630 in the light scheme, save it as public/og.png, and delete the copy.
+import "../styles/global.css";
+import Figure from "../components/figures/Figure.astro";
+---
+
+<html lang="en">
+  <head><meta charset="utf-8" /><title>og card</title></head>
+  <body>
+    <div class="card">
+      <div class="text">
+        <p class="label">scshafe.github.io</p>
+        <h1>I build software for my own machines, then make it good enough to share.</h1>
+        <p class="name">Cole Shaffer</p>
+      </div>
+      <div class="figs">
+        <div class="panel"><Figure name="leyline" /></div>
+        <div class="panel"><Figure name="switchyard" /></div>
+        <div class="panel"><Figure name="voice" /></div>
+      </div>
+    </div>
+  </body>
+</html>
+
+<style>
+  body { margin: 0; }
+  .card { width: 1200px; height: 630px; box-sizing: border-box; padding: 64px 64px 64px 72px; display: grid; grid-template-columns: 1fr 300px; gap: 64px; background: var(--paper); }
+  .text { display: flex; flex-direction: column; justify-content: space-between; }
+  .label { margin: 0; font-size: 18px; }
+  h1 { font-size: 64px; line-height: 1.06; letter-spacing: -0.02em; margin: 0; }
+  .name { margin: 0; font-size: 28px; }
+  .figs { display: grid; gap: 14px; align-content: center; }
+  .panel { background: var(--paper-raised); border: 1px solid var(--rule); border-radius: 6px; padding: 8px 14px; height: 154px; box-sizing: border-box; display: flex; align-items: center; }
+  .panel :global(svg) { height: 136px; width: auto; margin: auto; }
+</style>

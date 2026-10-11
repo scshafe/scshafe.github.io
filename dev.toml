@@ -1,0 +1,42 @@
+# Project intent (BASE-01). The schema is illustrative until M2/M7 fix it.
+schema_version = 1
+
+[project]
+id = "scshafe-github-io"
+class = "managed"
+
+# A deployed application that is not (yet) an scshafe-app: it graduates to
+# the app kind (class "scshafe-app") when M0 migrates it.
+[app]
+kind = "service"
+
+# BASE-06: the one command that verifies this repository, run from its root
+# by .github/workflows/ci.yml and by hand on the checkout under review. Keep
+# the two equal.
+[verify]
+command = "pnpm run verify"
+
+# SERVICE-01: how this service reaches production. lane = "autodeploy"
+# (Lubuntu's mc-autodeploy redeploys main), "runner" (a deploy workflow on a
+# self-hosted runner: the project's own file, reviewed by hand) or "none"
+# (not deployed); stack = its infra stack, host = where it runs (both
+# optional). SERVICE-02: ci.yml never deploys; the lane does.
+[deploy]
+lane = "none"
+
+[skills]
+# BASE-05 asks for .agents/skills; the catalog is M4. Recorded gap.
+selected = []
+
+# Adopted, not generated (D-6): `dev adopt --add-missing` added this file to
+# an existing service on 2026-10-11. It records which scshafe-dev standard the
+# repository was adopted under; it does not claim scshafe-dev rendered this
+# repository's files, and the ones that existed were left as they are.
+[template]
+source = "scshafe/scshafe-dev"
+version = "0.11.1"
+commit = "994b1839fc7fe7de1392f262ad0df359a14e0eb6"
+released = true
+dirty = false
+mode = "adopted"
+params = { kind = "service", name = "scshafe-github-io", date = "2026-10-11" }

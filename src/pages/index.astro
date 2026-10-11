@@ -1,0 +1,109 @@
+---
+import Base from "../layouts/Base.astro";
+import Plate from "../components/Plate.astro";
+import { projects, writing, shortDate, isoDate } from "../lib";
+
+const all = await projects();
+const featured = all.filter((p) => p.data.featured);
+const others = all.filter((p) => !p.data.featured);
+const posts = (await writing()).slice(0, 5);
+---
+
+<Base current="home">
+  <section class="intro wrap">
+    <h1>I build software for my own machines, then make it good enough to share.</h1>
+    <p class="lede">
+      A tiling window manager for macOS, a mail sorter that runs on local models, and a lab for my own voice. Most of it
+      runs on hardware I own, with no cloud account in the loop.
+    </p>
+  </section>
+
+  <section class="wrap" aria-labelledby="work">
+    <h2 id="work" class="label heading">Selected work</h2>
+    {featured.map((p) => <Plate project={p} />)}
+  </section>
+
+  {
+    posts.length > 0 && (
+      <section class="wrap" aria-labelledby="writing">
+        <h2 id="writing" class="label heading">Writing</h2>
+        <ul class="list">
+          {posts.map((p) => (
+            <li>
+              <time class="label" datetime={isoDate(p.data.date)}>{shortDate(p.data.date)}</time>
+              <a href={`/writing/${p.id}/`}>{p.data.title}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  {
+    others.length > 0 && (
+      <section class="wrap" aria-labelledby="also">
+        <h2 id="also" class="label heading">Also</h2>
+        <ul class="list">
+          {others.map((p) => (
+            <li>
+              <span class="label">{p.data.kicker}</span>
+              <a href={`/projects/${p.id}/`}>{p.data.title}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</Base>
+
+<style>
+  .intro {
+    padding-top: clamp(2.5rem, 9vw, 7rem);
+    padding-bottom: clamp(2.5rem, 6vw, 4.5rem);
+  }
+  h1 {
+    font-size: var(--step-3);
+    max-width: 21ch;
+    letter-spacing: -0.02em;
+    line-height: 1.08;
+  }
+  .lede {
+    margin: 1.5rem 0 0;
+    max-width: 34rem;
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+  .heading {
+    margin: 0 0 1rem;
+  }
+  section + section {
+    margin-top: clamp(3rem, 7vw, 5rem);
+  }
+  .list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .list li {
+    display: grid;
+    grid-template-columns: minmax(8rem, 14rem) 1fr;
+    gap: 0.25rem 1.5rem;
+    align-items: baseline;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .list a {
+    text-decoration: none;
+  }
+  .list a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+  }
+  @media (max-width: 560px) {
+    .list li {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

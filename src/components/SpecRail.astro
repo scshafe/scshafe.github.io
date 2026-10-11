@@ -1,0 +1,43 @@
+---
+// The project's facts, set like a data sheet beside the text.
+interface Props {
+  items: { label: string; value: string; href?: string | undefined }[];
+}
+const { items } = Astro.props;
+---
+
+<dl class="spec">
+  {
+    items.map((i) => (
+      <div>
+        <dt class="label">{i.label}</dt>
+        <dd>{i.href ? <a href={i.href}>{i.value}</a> : i.value}</dd>
+      </div>
+    ))
+  }
+</dl>
+
+<style>
+  .spec {
+    margin: 0;
+    display: grid;
+    gap: 1rem;
+  }
+  dt {
+    margin: 0;
+  }
+  dd {
+    margin: 0.1rem 0 0;
+    font-size: 0.95rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+  @media (max-width: 899px) {
+    .spec {
+      grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+      gap: 1rem 1.5rem;
+      padding: 1.25rem 0;
+      border-block: 1px solid var(--rule);
+    }
+  }
+</style>

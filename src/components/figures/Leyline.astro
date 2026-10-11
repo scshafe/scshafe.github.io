@@ -1,0 +1,72 @@
+---
+// A display tiled the way Leyline tiles it: largest cell first, one shared gap,
+// the focused window outlined in the accent.
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+
+const x0 = 28, y0 = 44, x1 = 452, y1 = 276, g = 6;
+const w = x1 - x0, h = y1 - y0;
+const half = (w - g) / 2;
+const rightX = x0 + half + g;
+const rowH = (h - g) / 2;
+const quarter = (half - g) / 2;
+const tiles = [
+  { x: x0, y: y0, w: half, h, focus: false },
+  { x: rightX, y: y0, w: half, h: rowH, focus: true },
+  { x: rightX, y: y0 + rowH + g, w: quarter, h: rowH, focus: false },
+  { x: rightX + quarter + g, y: y0 + rowH + g, w: quarter, h: rowH, focus: false },
+];
+---
+
+<svg class:list={["figure", className]} viewBox="0 0 480 300" role="img" aria-label="A screen divided into four tiled windows with even gaps; one window has a highlighted border.">
+  <rect x="20" y="16" width="440" height="268" rx="10" class="frame" />
+  <line x1="20" y1="36" x2="460" y2="36" class="faint" />
+  <circle cx="240" cy="26" r="2" class="dot" />
+  {
+    tiles.map((t) => (
+      <g>
+        <rect x={t.x} y={t.y} width={t.w} height={t.h} rx="5" class={t.focus ? "focus" : "tile"} />
+        <line x1={t.x} y1={t.y + 16} x2={t.x + t.w} y2={t.y + 16} class="faint" />
+        {[0, 1, 2].map((i) => (
+          <circle cx={t.x + 10 + i * 8} cy={t.y + 8} r="2" class={t.focus ? "dot accent" : "dot"} />
+        ))}
+      </g>
+    ))
+  }
+</svg>
+
+<style>
+  .figure {
+    width: 100%;
+    height: auto;
+    fill: none;
+  }
+  .figure :global(*) {
+    vector-effect: non-scaling-stroke;
+  }
+  .frame {
+    stroke: var(--ink-2);
+    stroke-width: 1;
+  }
+  .faint {
+    stroke: var(--rule-strong);
+    stroke-width: 1;
+  }
+  .tile {
+    stroke: var(--ink-3);
+    stroke-width: 1;
+  }
+  .focus {
+    stroke: var(--accent);
+    stroke-width: 1.75;
+    fill: var(--accent-soft);
+  }
+  .dot {
+    fill: var(--rule-strong);
+  }
+  .dot.accent {
+    fill: var(--accent);
+  }
+</style>

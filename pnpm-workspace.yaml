@@ -1,0 +1,4 @@
+# Fail the install if a dependency wants to run a build script that is not
+# allowed here (fleet default). Astro needs none: esbuild ships its binary as
+# an optional platform package, and the site uses no image processing.
+strictDepBuilds: true
