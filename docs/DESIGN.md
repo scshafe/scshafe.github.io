@@ -37,13 +37,17 @@ so they follow dark mode.
 
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
-| `--paper` | `#f6f4ef` | `#151513` | page |
-| `--paper-raised` | `#fbfaf7` | `#1b1b18` | figure panels |
-| `--ink` | `#1c1b19` | `#e9e6df` | text |
-| `--ink-2` | `#5f5b53` | `#a8a399` | secondary text |
-| `--ink-3` | `#8f8a80` | `#7a766d` | labels, drawing structure |
-| `--rule` | `#dcd7cc` | `#2e2c28` | hairlines |
-| `--accent` | `#b5441b` | `#e57b52` | the one live element; link hover |
+| `--paper` | `#f7f8f8` | `#101214` | page |
+| `--paper-raised` | `#fdfdfd` | `#16191c` | figure panels |
+| `--ink` | `#15171a` | `#e5e8eb` | text |
+| `--ink-2` | `#545a62` | `#a1a8b0` | secondary text |
+| `--ink-3` | `#868d96` | `#6f7781` | labels, drawing structure |
+| `--rule` | `#dde1e5` | `#262a2f` | hairlines |
+| `--accent` | `#1f4f94` | `#84aee8` | the one live element; link hover |
+
+The palette is cool paper and a cyanotype blue, the colour of a blueprint, because
+the drawings are diagrams. A first pass used warm cream with a terracotta accent and
+was dropped: with a book serif it is the stock look of generated sites.
 
 - **Type:** Newsreader (variable, optical sizes) for everything you read; JetBrains
   Mono for small labels, the spec rail, code and keys. Headings are regular weight,
@@ -64,7 +68,6 @@ so they follow dark mode.
 
 ## The link-preview image
 
-`public/og.png` (1200 x 630) is the home sentence beside the three drawings. It was
-rendered from a temporary Astro page that composed `Figure` components with the site
-CSS, screenshotted with Playwright at 1200 x 630, then removed. Re-render it the same
-way if the sentence or the drawings change.
+`public/og.png` (1200 x 630) is the home sentence beside the three drawings, drawn
+with the site's own CSS and figures by `scripts/og-card.astro`. The steps to
+re-render it are at the top of that file.

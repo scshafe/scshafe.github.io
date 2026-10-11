@@ -7,16 +7,17 @@
 @import "@fontsource-variable/jetbrains-mono/wght.css";
 
 :root {
-  --paper: #f6f4ef;
-  --paper-raised: #fbfaf7;
-  --ink: #1c1b19;
-  --ink-2: #5f5b53;
-  --ink-3: #8f8a80;
-  --rule: #dcd7cc;
-  --rule-strong: #c4beb1;
-  --accent: #b5441b;
-  --accent-soft: #b5441b1f;
-  --code-bg: #ece8df;
+  /* Cool paper and a cyanotype blue: the drawings are blueprints. */
+  --paper: #f7f8f8;
+  --paper-raised: #fdfdfd;
+  --ink: #15171a;
+  --ink-2: #545a62;
+  --ink-3: #868d96;
+  --rule: #dde1e5;
+  --rule-strong: #c3c9d0;
+  --accent: #1f4f94;
+  --accent-soft: #1f4f9414;
+  --code-bg: #ebeef1;
 
   --serif: "Newsreader Variable", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -35,16 +36,16 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #151513;
-    --paper-raised: #1b1b18;
-    --ink: #e9e6df;
-    --ink-2: #a8a399;
-    --ink-3: #7a766d;
-    --rule: #2e2c28;
-    --rule-strong: #45423c;
-    --accent: #e57b52;
-    --accent-soft: #e57b5224;
-    --code-bg: #22211e;
+    --paper: #101214;
+    --paper-raised: #16191c;
+    --ink: #e5e8eb;
+    --ink-2: #a1a8b0;
+    --ink-3: #6f7781;
+    --rule: #262a2f;
+    --rule-strong: #3a4047;
+    --accent: #84aee8;
+    --accent-soft: #84aee81f;
+    --code-bg: #1d2125;
     color-scheme: dark;
   }
 }

@@ -23,7 +23,7 @@ looks.
 - `scripts/check-site.mjs`: the post-build check (links, metadata, no other origins,
   no private details).
 - `public/og.png`: the link-preview image (1200 x 630), rendered from the site's own
-  type and drawings; see `docs/DESIGN.md` to regenerate it.
+  type and drawings by `scripts/og-card.astro` (the steps are in that file).
 
 ## Rules
 
