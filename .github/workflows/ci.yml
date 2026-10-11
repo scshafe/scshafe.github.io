@@ -1,0 +1,41 @@
+name: CI
+
+# BASE-04. Added by scshafe-dev (the service kind). It runs
+# dev.toml [verify] command (BASE-06): keep the two equal.
+#
+# SERVICE-02: this workflow verifies and never deploys. The service reaches
+# production through the lane dev.toml [deploy] declares (mc-autodeploy, or a
+# deploy workflow on a self-hosted runner, which is a separate file reviewed
+# by hand). Here: GitHub-hosted runners only, a read-only job token and no
+# other credential, no deployment environment, no deploy-shaped command;
+# `dev check` enforces it.
+#
+# No language is assumed. ubuntu-latest has common toolchains preinstalled
+# (Node, Python, Go, a C compiler, docker); add the setup step your [verify]
+# command needs before it (actions/setup-node, actions/setup-go, ...), pinned
+# by SHA, and `packages: read` below if it installs private @scshafe packages.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify (dev.toml [verify] command)
+        run: |
+          pnpm run verify
