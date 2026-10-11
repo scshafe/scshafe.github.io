@@ -86,7 +86,7 @@ for (const file of files) {
   if (h1s.length !== 1) fail(name, `${h1s.length} <h1> elements`);
 
   const base = posix.dirname("/" + name);
-  for (const [, attr, url] of text.matchAll(/\b(href|src|srcset)="([^"]*)"/g)) {
+  for (const [, attr, url] of text.matchAll(/\b(href|src|srcset|poster)="([^"]*)"/g)) {
     if (url === "" ) {
       fail(name, `empty ${attr}`);
       continue;
