@@ -1,0 +1,88 @@
+---
+import Base from "../../layouts/Base.astro";
+import Figure from "../../components/figures/Figure.astro";
+import { projects } from "../../lib";
+
+const all = await projects();
+---
+
+<Base title="Projects" description="Things Cole Shaffer has built: what they do, how they work and where they stand." current="projects">
+  <section class="wrap head">
+    <h1>Projects</h1>
+    <p class="lede">What each one does, how it works, and where it stands.</p>
+  </section>
+  <section class="wrap grid">
+    {
+      all.map((p) => (
+        <a class="card" href={`/projects/${p.id}/`}>
+          {p.data.figure !== "none" && (
+            <div class="panel">
+              <Figure name={p.data.figure} />
+            </div>
+          )}
+          <p class="label">{p.data.kicker}</p>
+          <h2>{p.data.title}</h2>
+          <p class="summary">{p.data.summary}</p>
+          <p class="label">{p.data.status}</p>
+        </a>
+      ))
+    }
+  </section>
+</Base>
+
+<style>
+  .head {
+    padding-top: clamp(2rem, 6vw, 4.5rem);
+    padding-bottom: clamp(2rem, 5vw, 3.5rem);
+  }
+  h1 {
+    font-size: var(--step-3);
+    letter-spacing: -0.02em;
+  }
+  .lede {
+    margin: 1rem 0 0;
+    color: var(--ink-2);
+    font-size: var(--step-1);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+    gap: clamp(2rem, 4vw, 3rem) clamp(1.5rem, 3vw, 2.5rem);
+  }
+  .card {
+    display: block;
+    text-decoration: none;
+  }
+    .panel {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1.1rem;
+    transition: border-color 160ms ease;
+  }
+  .card:hover .panel {
+    border-color: var(--rule-strong);
+  }
+  .card .label {
+    margin: 0;
+  }
+  h2 {
+    font-size: var(--step-1);
+    margin: 0.3rem 0 0;
+  }
+  .card:hover h2 {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+  .summary {
+    margin: 0.5rem 0 0;
+    color: var(--ink-2);
+    font-size: 1rem;
+  }
+  .card .summary + .label {
+    margin-top: 0.75rem;
+  }
+</style>

@@ -1,0 +1,24 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="Not found" description="This page does not exist.">
+  <section class="wrap">
+    <p class="label">404</p>
+    <h1>This page isn't here.</h1>
+    <p>It may have moved when the site was rebuilt. <a href="/projects/">The projects</a> are a good place to start.</p>
+  </section>
+</Base>
+
+<style>
+  section {
+    padding-top: clamp(3rem, 10vw, 7rem);
+  }
+  h1 {
+    font-size: var(--step-3);
+    margin: 0.4rem 0 1rem;
+  }
+  p:last-child {
+    color: var(--ink-2);
+  }
+</style>

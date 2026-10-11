@@ -1,0 +1,82 @@
+---
+import Base from "../../layouts/Base.astro";
+import { writing, longDate, isoDate } from "../../lib";
+
+const posts = await writing();
+---
+
+<Base title="Writing" description="Notes, experiences and stories by Cole Shaffer." current="writing">
+  <section class="wrap head">
+    <h1>Writing</h1>
+    <p class="lede">Notes from building things, and the occasional story.</p>
+  </section>
+  <section class="wrap">
+    {
+      posts.length === 0 ? (
+        <p class="empty">Nothing published yet.</p>
+      ) : (
+        <ul class="list">
+          {posts.map((p) => (
+            <li>
+              <time class="label" datetime={isoDate(p.data.date)}>{longDate(p.data.date)}</time>
+              <div>
+                <a href={`/writing/${p.id}/`}>{p.data.title}</a>
+                <p>{p.data.summary}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </section>
+</Base>
+
+<style>
+  .head {
+    padding-top: clamp(2rem, 6vw, 4.5rem);
+    padding-bottom: clamp(2rem, 5vw, 3.5rem);
+  }
+  h1 {
+    font-size: var(--step-3);
+    letter-spacing: -0.02em;
+  }
+  .lede {
+    margin: 1rem 0 0;
+    color: var(--ink-2);
+    font-size: var(--step-1);
+  }
+  .empty {
+    color: var(--ink-2);
+  }
+  .list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    max-width: 52rem;
+  }
+  .list li {
+    display: grid;
+    grid-template-columns: 11rem minmax(0, 1fr);
+    gap: 0.25rem 1.5rem;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .list a {
+    font-size: var(--step-1);
+    text-decoration: none;
+  }
+  .list a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+  }
+  .list p {
+    margin: 0.35rem 0 0;
+    color: var(--ink-2);
+  }
+  @media (max-width: 560px) {
+    .list li {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

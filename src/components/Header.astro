@@ -1,0 +1,54 @@
+---
+import { SITE } from "../site";
+import { writing } from "../lib";
+
+interface Props {
+  current?: "home" | "projects" | "writing";
+}
+const { current } = Astro.props;
+// Writing appears in the navigation once something is published.
+const hasWriting = (await writing()).length > 0;
+---
+
+<header class="wrap">
+  <a class="name" href="/" aria-current={current === "home" ? "page" : undefined}>{SITE.name}</a>
+  <nav aria-label="Site">
+    <a class="label" href="/projects/" aria-current={current === "projects" ? "page" : undefined}>Projects</a>
+    {hasWriting && <a class="label" href="/writing/" aria-current={current === "writing" ? "page" : undefined}>Writing</a>}
+    <a class="label" href={SITE.github} rel="me">GitHub<span aria-hidden="true"> ↗</span></a>
+  </nav>
+</header>
+
+<style>
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: clamp(1.25rem, 3vw, 2rem);
+    padding-bottom: clamp(1.25rem, 3vw, 2rem);
+  }
+  .name {
+    font-size: 1.125rem;
+    text-decoration: none;
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+  }
+  nav {
+    display: flex;
+    gap: clamp(0.9rem, 3vw, 1.75rem);
+  }
+  nav a {
+    text-decoration: none;
+    color: var(--ink-2);
+  }
+  nav a:hover,
+  nav a[aria-current="page"] {
+    color: var(--ink);
+  }
+  nav a[aria-current="page"] {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 0.45em;
+  }
+</style>

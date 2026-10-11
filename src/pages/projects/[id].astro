@@ -1,0 +1,129 @@
+---
+import { render } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import Figure from "../../components/figures/Figure.astro";
+import SpecRail from "../../components/SpecRail.astro";
+import { projects, longDate, isoDate } from "../../lib";
+
+export async function getStaticPaths() {
+  const all = await projects();
+  return all.map((project, i) => ({
+    params: { id: project.id },
+    props: { project, next: all[(i + 1) % all.length] },
+  }));
+}
+
+interface Props {
+  project: CollectionEntry<"projects">;
+  next: CollectionEntry<"projects">;
+}
+
+const { project, next } = Astro.props;
+const { Content } = await render(project);
+const d = project.data;
+const spec = [{ label: "Status", value: d.status }, ...(d.started ? [{ label: "Since", value: d.started }] : []), ...d.spec];
+---
+
+<Base title={d.title} description={d.summary} type="article" current="projects">
+  <article>
+    <header class="wrap head">
+      <p class="label">{d.kicker}</p>
+      <h1>{d.title}</h1>
+      <p class="summary">{d.summary}</p>
+    </header>
+
+    {
+      d.figure !== "none" && (
+        <div class="wrap">
+          <div class="hero">
+            <Figure name={d.figure} />
+          </div>
+        </div>
+      )
+    }
+
+    <div class="wrap body">
+      <aside aria-label="Project facts">
+        <SpecRail items={spec} />
+      </aside>
+      <div class="prose">
+        <Content />
+        <p class="label updated">Updated <time datetime={isoDate(d.updated)}>{longDate(d.updated)}</time></p>
+      </div>
+    </div>
+
+    <nav class="wrap pager" aria-label="More projects">
+      <a href="/projects/" class="label">← All projects</a>
+      {next.id !== project.id && <a href={`/projects/${next.id}/`} class="label">{next.data.title} →</a>}
+    </nav>
+  </article>
+</Base>
+
+<style>
+  .head {
+    padding-top: clamp(2rem, 6vw, 4.5rem);
+    padding-bottom: clamp(1.75rem, 4vw, 2.75rem);
+  }
+    .head .label {
+    margin: 0;
+  }
+  h1 {
+    font-size: var(--step-3);
+    letter-spacing: -0.02em;
+    margin: 0.5rem 0 0;
+  }
+  .summary {
+    margin: 1rem 0 0;
+    max-width: 40rem;
+    font-size: var(--step-1);
+    line-height: 1.45;
+    color: var(--ink-2);
+  }
+  .hero {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: clamp(1rem, 3vw, 2rem);
+  }
+  .hero :global(svg) {
+    max-width: 34rem;
+    margin-inline: auto;
+  }
+  .body {
+    display: grid;
+    grid-template-columns: 12rem minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 5rem);
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+  }
+  aside {
+    position: sticky;
+    top: 2rem;
+    align-self: start;
+  }
+  .updated {
+    margin-top: 3rem !important;
+  }
+  .pager {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: clamp(3rem, 7vw, 5rem);
+  }
+  .pager a {
+    text-decoration: none;
+    color: var(--ink-2);
+  }
+  .pager a:hover {
+    color: var(--ink);
+  }
+  @media (max-width: 899px) {
+    .body {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2rem;
+    }
+    aside {
+      position: static;
+    }
+  }
+</style>

@@ -1,0 +1,15 @@
+---
+import Leyline from "./Leyline.astro";
+import Switchyard from "./Switchyard.astro";
+import Voice from "./Voice.astro";
+
+interface Props {
+  name: "leyline" | "switchyard" | "voice" | "none";
+  class?: string;
+}
+const { name, class: className } = Astro.props;
+---
+
+{name === "leyline" && <Leyline class={className} />}
+{name === "switchyard" && <Switchyard class={className} />}
+{name === "voice" && <Voice class={className} />}

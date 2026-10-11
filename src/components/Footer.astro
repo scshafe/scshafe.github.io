@@ -1,0 +1,40 @@
+---
+import { SITE } from "../site";
+const year = new Date().getUTCFullYear();
+---
+
+<footer class="wrap">
+  <div class="inner">
+    <p class="label">© {year} {SITE.name}</p>
+    <p class="label">
+      <a href={SITE.github}>github.com/{SITE.githubHandle}</a>
+      <span aria-hidden="true"> · </span>
+      <a href="/rss.xml">RSS</a>
+      <span aria-hidden="true"> · </span>
+      <a href="https://github.com/scshafe/scshafe.github.io">Source</a>
+    </p>
+  </div>
+</footer>
+
+<style>
+  footer {
+    margin-top: clamp(4rem, 10vw, 7rem);
+  }
+  .inner {
+    border-top: 1px solid var(--rule);
+    padding: 1.25rem 0 2.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+  }
+  p {
+    margin: 0;
+  }
+  a {
+    text-decoration: none;
+  }
+  a:hover {
+    color: var(--ink);
+  }
+</style>
