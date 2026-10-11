@@ -50,8 +50,10 @@ GitHub Pages. The live site changes a minute or two after a merge; watch it with
 go-ahead.
 
 This repository is public, so CI runs on pull requests: wait for it to pass. Merge
-locally as the noreply identity (`git merge --no-ff`, then push `main`), never with
-`gh pr merge`, which would put the account email into public history.
+locally as the noreply identity (`git merge --no-ff` with the subject
+`Merge #<N>: <title>`, then push `main`), never with `gh pr merge`, which would put
+the account email into public history. That replaces step 3 of the managed section
+below, which is the template's private-repository default.
 
 <!-- scshafe-dev:begin landing -->
 ## Verify and landing
