@@ -5,6 +5,12 @@ summary: Keeps the windows on a Mac neatly arranged side by side, so you never d
 figure: leyline
 order: 1
 featured: true
+demo:
+  video: /media/leyline-demo.mp4
+  poster: /media/leyline-demo-poster.webp
+  width: 1920
+  height: 1242
+  caption: Fifteen seconds of Leyline on a MacBook Air, cut from a longer recording. Window contents are blurred.
 status: Released · 1.0.0
 updated: 2026-10-09
 spec:

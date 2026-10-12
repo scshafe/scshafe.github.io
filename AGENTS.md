@@ -22,6 +22,8 @@ looks.
 - `src/styles/global.css`: every token (colour, type, spacing) lives here.
 - `scripts/check-site.mjs`: the post-build check (links, metadata, no other origins,
   no private details).
+- `public/media/`: screen recordings shown at the top of a project page (the `demo`
+  front matter). H.264 MP4 with a WebP poster, a few hundred KB.
 - `public/og.png`: the link-preview image (1200 x 630), rendered from the site's own
   type and drawings by `scripts/og-card.astro` (the steps are in that file).
 
@@ -31,7 +33,9 @@ looks.
   (mailroom, voice-lab) at the level their owner chose; never add an email address,
   a host name, a tailnet or LAN address, a path from a machine, a token, a recording,
   or a detail from a private repository the owner has not published here. The check
-  script refuses the mechanical ones; the rest is on you.
+  script refuses the mechanical ones; the rest is on you. A screen recording or
+  screenshot shows far more than the page around it: blur every window's contents
+  and the menu bar, and look at every frame at full size before it goes in.
 - **Say only what is true.** Every claim about a project comes from that project's
   own README, docs or release notes. Status lines say where it actually stands
   (mailroom is deployed but not live; voice-lab is in progress).

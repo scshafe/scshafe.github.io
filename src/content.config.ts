@@ -26,6 +26,17 @@ const projects = defineCollection({
     spec: z
       .array(z.object({ label: z.string(), value: z.string(), href: z.url().optional() }))
       .default([]),
+    // A short screen recording (public/media/), shown in place of the drawing at the
+    // top of the project page. The drawing still heads the project's card.
+    demo: z
+      .object({
+        video: z.string().startsWith("/media/"),
+        poster: z.string().startsWith("/media/"),
+        width: z.number().int(),
+        height: z.number().int(),
+        caption: z.string(),
+      })
+      .optional(),
     draft: z.boolean().default(false),
   }),
 });
